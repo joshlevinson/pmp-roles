@@ -1,0 +1,14 @@
+#repair_roles_container{
+	background: #fff;
+	float: left;
+	padding: 8px 10px;
+	margin-top: 25px;
+}
+#repaired_roles{
+	display: none;
+	margin-bottom: 0;
+}
+#repair_roles, #repair_roles:active{
+	vertical-align: middle;
+	margin-left: 15px;
+}
