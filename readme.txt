@@ -2,8 +2,8 @@
 Contributors: joshlevinson
 Tags: pmpro, membership, wordpress roles
 Requires at least: 3.0
-Tested up to: 4.7
-Stable tag: 1.0
+Tested up to: 4.8.1
+Stable tag: 1.1
 =========
 
 Adds a WordPress Role for each Membership Level with Display Name = Membership Level Name and Role Name = 'pmpro_role_X' (where X is the Membership Level's ID).
@@ -24,5 +24,8 @@ This plugin currently requires Paid Memberships Pro.
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-roles/issues
 
 == Changelog ==
+= 1.1 =
+* Added a "Delete Roles and Deactivate" link to the plugins page to deactivate with a bit more cleanup. Users are given the "Subscriber" role if they had a membership level based role before.
+
 = 1.0 =
 * This is the initial version of the plugin.

@@ -5,7 +5,7 @@ Description: Adds a WordPress Role for each Membership Level with Display Name =
 Plugin URI: http://joshlevinson.me
 Author: Josh Levinson
 Author URI: http://joshlevinson.me
-Version: 1.0
+Version: 1.1
 License: GPL2
 Text Domain: pmpro-roles
 Domain Path: /pmpro-roles
@@ -40,6 +40,8 @@ class PMPRO_Roles {
 		add_action("pmpro_after_change_membership_level", array($this, 'user_change_level'), 10, 2);
 		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
 		add_action('wp_ajax_'.PMPRO_Roles::$ajaction, array( $this, 'install' ) );
+		add_filter('plugin_action_links_' . plugin_basename(__FILE__), array('PMPRO_Roles', 'add_action_links'));
+		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
 	}
 	
 	function enqueue_admin_scripts($hook) {
@@ -157,6 +159,56 @@ class PMPRO_Roles {
 			}
 			die();
 		}
+	}
+
+	/**
+	 * Add "Delete Roles and Deactivate" link to plugins page
+	 */
+	public static function add_action_links($links) {		
+		$new_links = array(
+			'<a href="' . wp_nonce_url(get_admin_url(NULL, 'plugins.php?pmpro_roles_delete_and_deactivate=1'), 'pmpro_roles_delete_and_deactivate') . '">' . __('Delete Roles and Deactivate', 'pmpro-roles') . '</a>',
+		);
+		return array_merge($new_links, $links);
+	}
+
+	/**
+	 * Process delete and deactivate if clicked.
+	 */
+	public static function delete_and_deactivate() {
+		//see if our param was passed
+		if(empty($_REQUEST['pmpro_roles_delete_and_deactivate']))
+			return;
+
+		//check nonce
+		check_admin_referer('pmpro_roles_delete_and_deactivate');
+		
+		//find roles based on levels
+		global $wpdb;
+		$roles = get_option( $wpdb->get_blog_prefix() . 'user_roles' );
+		
+		foreach($roles as $key => $role) {
+			//is this a pmpro role?
+			if(strpos($key, PMPRO_Roles::$role_key) === 0) {				
+				//change all users with those roles to have the default role			
+				$users = get_users(array('role'=>$key));
+				foreach($users as $user) {
+					$user->set_role('subscriber');
+				}
+
+				//delete the roles
+				remove_role($key);
+			}
+		}
+
+		//deactivate the plugin
+		deactivate_plugins( plugin_basename( __FILE__ ) );
+
+		//output deactivated notice:
+		?>
+		<div id="message" class="updated notice is-dismissible">
+			<p><?php _e('Plugin <strong>deactivated</strong>');?>.</p><button type="button" class="notice-dismiss"><span class="screen-reader-text"><?php _e('Dismiss this notice.');?></span></button>
+		</div>
+		<?php
 	}
 }
 new PMPRO_Roles;
