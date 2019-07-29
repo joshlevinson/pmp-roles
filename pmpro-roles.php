@@ -164,11 +164,16 @@ class PMPRO_Roles {
 	/**
 	 * Add "Delete Roles and Deactivate" link to plugins page
 	 */
-	public static function add_action_links($links) {		
-		$new_links = array(
-			'<a href="' . wp_nonce_url(get_admin_url(NULL, 'plugins.php?pmpro_roles_delete_and_deactivate=1'), 'pmpro_roles_delete_and_deactivate') . '">' . __('Delete Roles and Deactivate', 'pmpro-roles') . '</a>',
-		);
-		return array_merge($new_links, $links);
+	public static function add_action_links($links) {	
+		// Only add this if plugin is active.
+		if( is_plugin_active( 'pmpro-roles/pmpro-roles.php' ) ) {
+			$new_links = array(
+				'<a href="' . wp_nonce_url(get_admin_url(NULL, 'plugins.php?pmpro_roles_delete_and_deactivate=1'), 'pmpro_roles_delete_and_deactivate') . '">' . __('Delete Roles and Deactivate', 'pmpro-roles') . '</a>',
+			);
+			return array_merge($new_links, $links);
+		}
+
+		return $links;
 	}
 
 	/**
