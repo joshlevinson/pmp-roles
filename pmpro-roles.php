@@ -68,9 +68,12 @@ class PMPRO_Roles {
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
 		$role_key = PMPRO_Roles::$role_key . $saveid;
+
+		// Get default capabilities for current level.
+		$capabilities = PMPRO_Roles::capabilities();
 		//created a new level
 		if( $_REQUEST['edit'] < 0 ) {
-			add_role( $role_key, $_REQUEST['name'] );
+			add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
 		}
 		//edited a level
 		else {
@@ -81,7 +84,7 @@ class PMPRO_Roles {
 			if(!is_array( $roles ) ) return;
 			//the role doesn't exist - create it, then we are done.
 			if(!isset( $roles[$role_key] ) ){
-				add_role( $role_key, $_REQUEST['name'] );
+				add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
 				return;
 			}
 			$role = $roles[$role_key];
@@ -91,7 +94,7 @@ class PMPRO_Roles {
 				//delete the role (because update_role() doesn't exist...)
 				remove_role( $role_key );
 				//then recreate it
-				add_role( $role_key, $_REQUEST['name'] );
+				add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
 			}
 		}
 	}
@@ -141,13 +144,16 @@ class PMPRO_Roles {
 				return;
 			}
 		}
+
+		$capabilities = PMPRO_Roles::capabilities();
+
 		$i = 0;
 		foreach ( $levels as $level ) {
 			$role_key = PMPRO_Roles::$role_key . $level->id;
 			//the role doesn't exist for this level
 			if( !get_role( $role_key ) ) {
 				$i++;
-				add_role( $role_key, $level->name );
+				add_role( $role_key, $level->name, $capabilities[$level->id] );
 			}
 		}
 		if( defined( 'DOING_AJAX' ) && DOING_AJAX ){
@@ -159,6 +165,19 @@ class PMPRO_Roles {
 			}
 			die();
 		}
+	}
+
+	public static function capabilities() {
+		$all_levels = pmpro_getAllLevels( true, false );
+		$capabilities = array();
+
+		foreach ( $all_levels as $key => $value ) {
+			$capabilities[$key] = array( 'read' => true );
+		}
+
+		$capabilities = apply_filters( 'pmpro_roles_default_caps', $capabilities );
+
+		return $capabilities;
 	}
 
 	/**
