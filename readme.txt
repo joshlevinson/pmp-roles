@@ -46,7 +46,8 @@ Please visit our premium support site at https://www.paidmembershipspro.com for 
 
 == Changelog ==
 
-= 1.1 - 2020-05-17 =
+= 1.1 - 2020-05-18 =
+* BUG FIX/ENHANCEMENT: Adding the "read" capability to all custom level roles by default. You can filter custom role capabilities using the `pmpro_roles_default_caps` filter.
 * BUG FIX/ENHANCEMENT: Added a "Delete Roles and Deactivate" link to the plugins page to deactivate with a bit more cleanup. Users are given the "Subscriber" role if they had a membership level based role before.
 
 = 1.0 =
