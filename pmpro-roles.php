@@ -1,32 +1,16 @@
 <?php
-/*
-Plugin Name: PMPro Roles
-Description: Adds a WordPress Role for each Membership Level with Display Name = Membership Level Name and Role Name = 'pmpro_role_X' (where X is the Membership Level's ID).
-Plugin URI: http://joshlevinson.me
-Author: Josh Levinson
-Author URI: http://joshlevinson.me
-Version: 1.1
-License: GPL2
-Text Domain: pmpro-roles
-Domain Path: /pmpro-roles
-*/
+/**
+ * Plugin Name: Paid Memberships Pro - Roles Add On
+ * Description: Adds a WordPress Role for each Membership Level.
+ * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
+ * Author: Paid Memberships Pro
+ * Author URI: https://www.paidmembershipspro.com
+ * Version: 1.1
+ * License: GPL2
+ * Text Domain: pmpro-roles
+ * Domain Path: /pmpro-roles
+ */
 
-/*
-    Copyright (C) 2013  Josh Levinson  josh@joshlevinson.me
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
 class PMPRO_Roles {
 
 	static $role_key = 'pmpro_role_';
@@ -41,6 +25,7 @@ class PMPRO_Roles {
 		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
 		add_action('wp_ajax_'.PMPRO_Roles::$ajaction, array( $this, 'install' ) );
 		add_filter('plugin_action_links_' . plugin_basename(__FILE__), array('PMPRO_Roles', 'add_action_links'));
+		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
 		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
 	}
 	
@@ -192,6 +177,20 @@ class PMPRO_Roles {
 			return array_merge($new_links, $links);
 		}
 
+		return $links;
+	}
+
+	/**
+	 * Add links to the plugin row meta
+	 */
+	public static function plugin_row_meta( $links, $file ) {
+		if ( strpos( $file, 'pmpro-roles' ) !== false ) {
+			$new_links = array(
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-roles/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-roles' ) ) . '">' . __( 'Docs', 'pmpro-roles' ) . '</a>',
+				'<a href="' . esc_url( 'https://paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-roles' ) ) . '">' . __( 'Support', 'pmpro-roles' ) . '</a>',
+			);
+			$links     = array_merge( $links, $new_links );
+		}
 		return $links;
 	}
 
