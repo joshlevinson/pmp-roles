@@ -3,7 +3,7 @@ Contributors: strangerstudios, joshlevinson
 Tags: pmpro, paid memberships pro, membership, roles
 Requires at least: 3.0
 Tested up to: 5.4.1
-Stable tag: 1.1
+Stable tag: 1.2
 
 Adds a WordPress Role for each Membership Level.
 
@@ -46,9 +46,12 @@ Please visit our premium support site at https://www.paidmembershipspro.com for 
 
 == Changelog ==
 
-= 1.1 - 2020-05-21 =
+= 1.2 - 2020-05-21 =
 * BUG FIX/ENHANCEMENT: Adding the "read" capability to all custom level roles by default. You can filter custom role capabilities using the `pmpro_roles_default_caps` filter.
-* BUG FIX/ENHANCEMENT: Added a "Delete Roles and Deactivate" link to the plugins page to deactivate with a bit more cleanup. Users are given the "Subscriber" role if they had a membership level based role before.
+* BUG FIX: Repaired issue where the "Delete Roles and Deactivate" link would show when the plugin was inactive.
+
+= 1.1 = 
+* Added a "Delete Roles and Deactivate" link to the plugins page to deactivate with a bit more cleanup. Users are given the "Subscriber" role if they had a membership level based role before.
 
 = 1.0 =
 * FEATURE: This is the initial version of the plugin.
