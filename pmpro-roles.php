@@ -1,32 +1,16 @@
 <?php
-/*
-Plugin Name: PMPro Roles
-Description: Adds a WordPress Role for each Membership Level with Display Name = Membership Level Name and Role Name = 'pmpro_role_X' (where X is the Membership Level's ID).
-Plugin URI: http://joshlevinson.me
-Author: Josh Levinson
-Author URI: http://joshlevinson.me
-Version: 1.0
-License: GPL2
-Text Domain: pmpro-roles
-Domain Path: /pmpro-roles
-*/
+/**
+ * Plugin Name: Paid Memberships Pro - Roles Add On
+ * Description: Adds a WordPress Role for each Membership Level.
+ * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
+ * Author: Paid Memberships Pro
+ * Author URI: https://www.paidmembershipspro.com
+ * Version: 1.2
+ * License: GPL2
+ * Text Domain: pmpro-roles
+ * Domain Path: /pmpro-roles
+ */
 
-/*
-    Copyright (C) 2013  Josh Levinson  josh@joshlevinson.me
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as
-    published by the Free Software Foundation.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
 class PMPRO_Roles {
 
 	static $role_key = 'pmpro_role_';
@@ -40,6 +24,9 @@ class PMPRO_Roles {
 		add_action("pmpro_after_change_membership_level", array($this, 'user_change_level'), 10, 2);
 		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
 		add_action('wp_ajax_'.PMPRO_Roles::$ajaction, array( $this, 'install' ) );
+		add_filter('plugin_action_links_' . plugin_basename(__FILE__), array('PMPRO_Roles', 'add_action_links'));
+		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
+		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
 	}
 	
 	function enqueue_admin_scripts($hook) {
@@ -66,9 +53,12 @@ class PMPRO_Roles {
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
 		$role_key = PMPRO_Roles::$role_key . $saveid;
+
+		// Get default capabilities for current level.
+		$capabilities = PMPRO_Roles::capabilities();
 		//created a new level
 		if( $_REQUEST['edit'] < 0 ) {
-			add_role( $role_key, $_REQUEST['name'] );
+			add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
 		}
 		//edited a level
 		else {
@@ -79,7 +69,7 @@ class PMPRO_Roles {
 			if(!is_array( $roles ) ) return;
 			//the role doesn't exist - create it, then we are done.
 			if(!isset( $roles[$role_key] ) ){
-				add_role( $role_key, $_REQUEST['name'] );
+				add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
 				return;
 			}
 			$role = $roles[$role_key];
@@ -89,7 +79,7 @@ class PMPRO_Roles {
 				//delete the role (because update_role() doesn't exist...)
 				remove_role( $role_key );
 				//then recreate it
-				add_role( $role_key, $_REQUEST['name'] );
+				add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
 			}
 		}
 	}
@@ -139,13 +129,16 @@ class PMPRO_Roles {
 				return;
 			}
 		}
+
+		$capabilities = PMPRO_Roles::capabilities();
+
 		$i = 0;
 		foreach ( $levels as $level ) {
 			$role_key = PMPRO_Roles::$role_key . $level->id;
 			//the role doesn't exist for this level
 			if( !get_role( $role_key ) ) {
 				$i++;
-				add_role( $role_key, $level->name );
+				add_role( $role_key, $level->name, $capabilities[$level->id] );
 			}
 		}
 		if( defined( 'DOING_AJAX' ) && DOING_AJAX ){
@@ -157,6 +150,88 @@ class PMPRO_Roles {
 			}
 			die();
 		}
+	}
+
+	public static function capabilities() {
+		$all_levels = pmpro_getAllLevels( true, false );
+		$capabilities = array();
+
+		foreach ( $all_levels as $key => $value ) {
+			$capabilities[$key] = array( 'read' => true );
+		}
+
+		$capabilities = apply_filters( 'pmpro_roles_default_caps', $capabilities );
+
+		return $capabilities;
+	}
+
+	/**
+	 * Add "Delete Roles and Deactivate" link to plugins page
+	 */
+	public static function add_action_links($links) {	
+		// Only add this if plugin is active.
+		if( is_plugin_active( 'pmpro-roles/pmpro-roles.php' ) ) {
+			$new_links = array(
+				'<a href="' . wp_nonce_url(get_admin_url(NULL, 'plugins.php?pmpro_roles_delete_and_deactivate=1'), 'pmpro_roles_delete_and_deactivate') . '">' . __('Delete Roles and Deactivate', 'pmpro-roles') . '</a>',
+			);
+			return array_merge($new_links, $links);
+		}
+
+		return $links;
+	}
+
+	/**
+	 * Add links to the plugin row meta
+	 */
+	public static function plugin_row_meta( $links, $file ) {
+		if ( strpos( $file, 'pmpro-roles' ) !== false ) {
+			$new_links = array(
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-roles/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-roles' ) ) . '">' . __( 'Docs', 'pmpro-roles' ) . '</a>',
+				'<a href="' . esc_url( 'https://paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-roles' ) ) . '">' . __( 'Support', 'pmpro-roles' ) . '</a>',
+			);
+			$links     = array_merge( $links, $new_links );
+		}
+		return $links;
+	}
+
+	/**
+	 * Process delete and deactivate if clicked.
+	 */
+	public static function delete_and_deactivate() {
+		//see if our param was passed
+		if(empty($_REQUEST['pmpro_roles_delete_and_deactivate']))
+			return;
+
+		//check nonce
+		check_admin_referer('pmpro_roles_delete_and_deactivate');
+		
+		//find roles based on levels
+		global $wpdb;
+		$roles = get_option( $wpdb->get_blog_prefix() . 'user_roles' );
+		
+		foreach($roles as $key => $role) {
+			//is this a pmpro role?
+			if(strpos($key, PMPRO_Roles::$role_key) === 0) {				
+				//change all users with those roles to have the default role			
+				$users = get_users(array('role'=>$key));
+				foreach($users as $user) {
+					$user->set_role('subscriber');
+				}
+
+				//delete the roles
+				remove_role($key);
+			}
+		}
+
+		//deactivate the plugin
+		deactivate_plugins( plugin_basename( __FILE__ ) );
+
+		//output deactivated notice:
+		?>
+		<div id="message" class="updated notice is-dismissible">
+			<p><?php _e('Plugin <strong>deactivated</strong>');?>.</p><button type="button" class="notice-dismiss"><span class="screen-reader-text"><?php _e('Dismiss this notice.');?></span></button>
+		</div>
+		<?php
 	}
 }
 new PMPRO_Roles;
