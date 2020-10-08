@@ -27,6 +27,7 @@ class PMPRO_Roles {
 		add_filter('plugin_action_links_' . plugin_basename(__FILE__), array('PMPRO_Roles', 'add_action_links'));
 		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
 		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
+		add_action( 'pmpro_membership_level_after_other_settings', array( 'PMPRO_Roles', 'level_settings' ) );
 	}
 	
 	function enqueue_admin_scripts($hook) {
@@ -52,36 +53,48 @@ class PMPRO_Roles {
 	
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
-		$role_key = PMPRO_Roles::$role_key . $saveid;
-
-		// Get default capabilities for current level.
+		
 		$capabilities = PMPRO_Roles::capabilities();
-		//created a new level
-		if( $_REQUEST['edit'] < 0 ) {
-			add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
-		}
-		//edited a level
-		else {
-			global $wpdb;
-			//have to get all roles and find ours because get_role() doesn't yield the role's "pretty" name, only its index.
-			$roles = get_option( $wpdb->get_blog_prefix() . 'user_roles' );
-			//can't get the roles, die
-			if(!is_array( $roles ) ) return;
-			//the role doesn't exist - create it, then we are done.
-			if(!isset( $roles[$role_key] ) ){
-				add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
-				return;
+
+		if( !empty( $_REQUEST['pmpro_roles_level'] ) ){
+
+			$level_roles = $_REQUEST['pmpro_roles_level'];
+
+			//created a new level
+			if( $_REQUEST['edit'] < 0 ) {
+				
+				foreach( $level_roles as $role_key => $role_name ){
+					$capabilities = PMPRO_Roles::capabilities( $role_key[$role_key] );
+					add_role( $role_key, $role_name, $capabilities );	
+				}
+			} else {
+
+				global $wpdb;
+				//have to get all roles and find ours because get_role() doesn't yield the role's "pretty" name, only its index.
+				$roles = get_option( $wpdb->get_blog_prefix() . 'user_roles' );
+
+				if(!is_array( $roles ) ) return;
+
+				foreach( $level_roles as $role_key => $role_name ){
+
+					$capabilities = PMPRO_Roles::capabilities( $role_key );
+
+					if(!isset( $roles[$role_key] ) ){
+						add_role( $role_key, $_REQUEST['name'], $capabilities[$role_key] );
+						return;
+					}
+
+					remove_role( $role_key );
+
+					add_role( $role_key, $role_name, $capabilities );
+
+				}
 			}
-			$role = $roles[$role_key];
-			$role_name = $role['name'];
-			//we only need to update if the role's name has changed.
-			if( $role_name !== $_REQUEST['name'] ) {
-				//delete the role (because update_role() doesn't exist...)
-				remove_role( $role_key );
-				//then recreate it
-				add_role( $role_key, $_REQUEST['name'], $capabilities[$saveid] );
-			}
+
+			update_option( 'pmpro_roles_'.$saveid, $level_roles );
+
 		}
+		
 	}
 	
 	function delete_level() {
@@ -89,9 +102,21 @@ class PMPRO_Roles {
 		if( !isset( $_REQUEST['action'] ) || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] !== 'delete_membership_level' ) ) { return; }
 		$ml_id = $_REQUEST['deleteid'];
 		if($ml_id > 0){
-			$role_key = PMPRO_Roles::$role_key . $ml_id;
+
 			//this will silently fail if the role doesn't exist, so we're fine.
-			remove_role( $role_key );
+			$role_key = PMPRO_Roles::$role_key . $ml_id;
+			if( !empty( $role_key ) ){
+				remove_role( $role_key );
+			}
+			// ^Backwards compat. New delete loop below too
+			$roles = (array)get_option( 'pmpro_roles_'.$ml_id );
+
+			if( !empty( $roles ) ){
+				foreach( $roles as $role_key => $role_name ){
+					remove_role( $role_key );
+				}
+			}			
+			
 		}
 	}
 	
@@ -107,9 +132,60 @@ class PMPRO_Roles {
 		}
 		//set the role to our key
 		else {
-			$wp_user_object->set_role( PMPRO_Roles::$role_key . $level_id );
+			$roles = (array)get_option( 'pmpro_roles_'.$level_id );
+			if( !empty( $roles ) ){
+				foreach( $roles as $role_key => $role_name ){
+					$wp_user_object->set_role( $role_key );
+				}
+			} else {
+				$wp_user_object->set_role( PMPRO_Roles::$role_key . $level_id );
+			}
 		}
 	}
+
+	public static function level_settings() {
+		?>
+		<hr />
+		<h3><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?></h3>
+		<p><?php _e( "Choose which roles should be applied to this level.", 'pmpro-roles' ); ?></p>
+		<table>
+			<tbody class="form-table">
+				<?php
+				
+				$level_id = absint( filter_input( INPUT_GET, 'edit', FILTER_DEFAULT ) );
+
+				global $wp_roles;
+
+			    $all_roles = $wp_roles->roles;
+
+			    $editable_roles = apply_filters('editable_roles', $all_roles);
+
+			    unset( $editable_roles['administrator'] );
+
+			    $saved_roles = (array)get_option( 'pmpro_roles_'.$level_id );
+
+				if( !empty( $editable_roles ) ){
+
+					foreach( $editable_roles as $key => $role ){
+
+						?>
+						<tr>
+							<td><input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php if( isset( $saved_roles[$key] ) ){ echo 'checked=true'; } ?> />
+							</td>
+							<td>
+								<label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?></label>
+							</td>
+						</tr>
+						<?php
+					}
+
+				}
+				?>
+			</tbody>
+		</table>
+		<?php
+	}
+
 	
 	//activation function
 	public static function install() {
@@ -152,12 +228,16 @@ class PMPRO_Roles {
 		}
 	}
 
-	public static function capabilities() {
+	public static function capabilities( $role_key = null ) {
 		$all_levels = pmpro_getAllLevels( true, false );
 		$capabilities = array();
 
-		foreach ( $all_levels as $key => $value ) {
-			$capabilities[$key] = array( 'read' => true );
+		if( !empty( $role_key ) ){
+			$capabilities[$role_key] = array( 'read' => true );
+		} else {
+			foreach ( $all_levels as $key => $value ) {
+				$capabilities[$key] = array( 'read' => true );
+			}
 		}
 
 		$capabilities = apply_filters( 'pmpro_roles_default_caps', $capabilities );
