@@ -76,11 +76,10 @@ class PMPRO_Roles {
 
 				if(!is_array( $roles ) ) return;
 
-				foreach( $level_roles as $role_key => $role_name ){
-
-					$capabilities = PMPRO_Roles::capabilities( $role_key );
+				foreach( $level_roles as $role_key => $role_name ){					
 
 					if(!isset( $roles[$role_key] ) ){
+						$capabilities = PMPRO_Roles::capabilities( $role_key );
 						add_role( $role_key, $_REQUEST['name'], $capabilities[$role_key] );
 						return;
 					}
@@ -163,6 +162,8 @@ class PMPRO_Roles {
 
 			    $saved_roles = get_option( 'pmpro_roles_'.$level_id );			    
 			    
+			    asort( $editable_roles ); //Display alphabetically
+
 				if( !empty( $editable_roles ) ){
 					?>
 					<tr>
@@ -277,7 +278,19 @@ class PMPRO_Roles {
 		$capabilities = array();
 
 		if( !empty( $role_key ) ){
-			$capabilities[$role_key] = array( 'read' => true );
+			if( strpos( $role_key, PMPRO_Roles::$role_key ) !== false){
+				$capabilities[$role_key] = array( 'read' => true );
+			} else {
+				$caps = array();
+				//Get the caps of this role
+			 	$role_caps = get_role( $role_key )->capabilities;
+			 	if( !empty( $role_caps ) ){
+			 		foreach( $role_caps as $cap ){
+			 			$caps[$cap] = true;
+			 		}
+			 	}
+		 		$capabilities[$role_key] = $caps;
+			}
 		} else {
 			foreach ( $all_levels as $key => $value ) {
 				$capabilities[$key] = array( 'read' => true );
