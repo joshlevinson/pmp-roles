@@ -28,6 +28,7 @@ class PMPRO_Roles {
 		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
 		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
 		add_action( 'pmpro_membership_level_after_other_settings', array( 'PMPRO_Roles', 'level_settings' ) );
+		add_filter( 'editable_roles', array( 'PMPRO_Roles', 'removeAdmin' ), 10, 1 );
 	}
 	
 	function enqueue_admin_scripts($hook) {
@@ -109,7 +110,7 @@ class PMPRO_Roles {
 				remove_role( $role_key );
 			}
 			// ^Backwards compat. New delete loop below too
-			$roles = (array)get_option( 'pmpro_roles_'.$ml_id );
+			$roles = get_option( 'pmpro_roles_'.$ml_id );
 
 			if( !empty( $roles ) ){
 				foreach( $roles as $role_key => $role_name ){
@@ -132,7 +133,7 @@ class PMPRO_Roles {
 		}
 		//set the role to our key
 		else {
-			$roles = (array)get_option( 'pmpro_roles_'.$level_id );
+			$roles = get_option( 'pmpro_roles_'.$level_id );
 			if( !empty( $roles ) ){
 				foreach( $roles as $role_key => $role_name ){
 					$wp_user_object->set_role( $role_key );
@@ -160,17 +161,28 @@ class PMPRO_Roles {
 
 			    $editable_roles = apply_filters('editable_roles', $all_roles);
 
-			    unset( $editable_roles['administrator'] );
-
-			    $saved_roles = (array)get_option( 'pmpro_roles_'.$level_id );
-
+			    $saved_roles = get_option( 'pmpro_roles_'.$level_id );			    
+			    
 				if( !empty( $editable_roles ) ){
 
 					foreach( $editable_roles as $key => $role ){
 
+						$checked = '';
+						//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
+						if( empty( $saved_roles ) ){
+							if( PMPRO_Roles::$role_key.$level_id == $key ){
+								$checked = 'checked=true';
+							}
+						}
+
+						if( isset( $saved_roles[$key] ) ){ 
+							$checked = 'checked=true';
+						}
+
+						
 						?>
 						<tr>
-							<td><input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php if( isset( $saved_roles[$key] ) ){ echo 'checked=true'; } ?> />
+							<td><input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> />
 							</td>
 							<td>
 								<label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?></label>
@@ -186,7 +198,14 @@ class PMPRO_Roles {
 		<?php
 	}
 
-	
+	public static function removeAdmin( $roles ){
+
+		unset( $roles['administrator'] );
+
+		return $roles;
+
+	}
+
 	//activation function
 	public static function install() {
 		
