@@ -28,7 +28,7 @@ class PMPRO_Roles {
 		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
 		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
 		add_action( 'pmpro_membership_level_after_other_settings', array( 'PMPRO_Roles', 'level_settings' ) );
-		add_filter( 'editable_roles', array( 'PMPRO_Roles', 'removeAdmin' ), 10, 1 );
+		add_filter( 'editable_roles', array( 'PMPRO_Roles', 'remove_list_roles' ), 10, 1 );
 	}
 	
 	function enqueue_admin_scripts($hook) {
@@ -202,9 +202,30 @@ class PMPRO_Roles {
 		<?php
 	}
 
-	public static function removeAdmin( $roles ){
+	public static function remove_list_roles( $roles ){
 
+		//Take admins out of the array first 
 		unset( $roles['administrator'] );
+
+		if( !function_exists( 'pmpro_getAllLevels' ) ){
+			return $roles;
+		}
+
+		if( !empty( $_REQUEST['edit'] ) ){
+
+			$edit_level = intval( $_REQUEST['edit'] );
+
+			$all_levels = pmpro_getAllLevels( true, false );
+
+			foreach( $all_levels as $level_key => $level ){
+				if( $level_key !== $edit_level ){
+					if( isset( $roles[PMPRO_Roles::$role_key.$level_key] ) ){
+						unset( $roles[PMPRO_Roles::$role_key.$level_key] ); 
+					}
+				}
+			}
+			
+		}
 
 		return $roles;
 
