@@ -147,7 +147,7 @@ class PMPRO_Roles {
 	public static function level_settings() {
 		?>
 		<hr />
-		<h3><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?></h3>
+		<h3><?php esc_html_e( 'Paid Memberships Pro - Roles', 'pmpro-roles' ); ?></h3>
 		<p><?php _e( "Choose which roles should be applied to this level.", 'pmpro-roles' ); ?></p>
 		<table>
 			<tbody class="form-table">
@@ -164,33 +164,37 @@ class PMPRO_Roles {
 			    $saved_roles = get_option( 'pmpro_roles_'.$level_id );			    
 			    
 				if( !empty( $editable_roles ) ){
+					?>
+					<tr>
+						<th scope="row" valign="top"><label><?php _e('Select Roles For This Level', 'pmpro-roles'); ?>:</label></th>
+						<td>
+							<ul>
+							<?php
+							foreach( $editable_roles as $key => $role ){
 
-					foreach( $editable_roles as $key => $role ){
+								$checked = '';
+								//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
+								if( empty( $saved_roles ) ){
+									if( PMPRO_Roles::$role_key.$level_id == $key ){
+										$checked = 'checked=true';
+									}
+								}
 
-						$checked = '';
-						//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
-						if( empty( $saved_roles ) ){
-							if( PMPRO_Roles::$role_key.$level_id == $key ){
-								$checked = 'checked=true';
+								if( isset( $saved_roles[$key] ) ){ 
+									$checked = 'checked=true';
+								}
+
+								
+								?>
+								<li>
+									<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?></label>
+								</li>
+								<?php
 							}
-						}
-
-						if( isset( $saved_roles[$key] ) ){ 
-							$checked = 'checked=true';
-						}
-
-						
-						?>
-						<tr>
-							<td><input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> />
-							</td>
-							<td>
-								<label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?></label>
-							</td>
-						</tr>
-						<?php
-					}
-
+							?>
+							</ul>
+						</td>
+					<?php
 				}
 				?>
 			</tbody>
