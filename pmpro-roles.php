@@ -62,11 +62,12 @@ class PMPRO_Roles {
 			$level_roles = $_REQUEST['pmpro_roles_level'];
 
 			//created a new level
-			if( $_REQUEST['edit'] < 0 ) {
-				
+			if( $_REQUEST['edit'] > 0 ) {
 				foreach( $level_roles as $role_key => $role_name ){
-					$capabilities = PMPRO_Roles::capabilities( $role_key[$role_key] );
-					add_role( $role_key, $role_name, $capabilities );	
+					if ( $role_key === 'pmpro_role_'. $saveid ) {
+						$capabilities = PMPRO_Roles::capabilities( $role_key );
+						add_role( $role_key, $role_name, $capabilities );	
+					}
 				}
 			} else {
 
@@ -121,25 +122,42 @@ class PMPRO_Roles {
 	}
 	
 	function user_change_level($level_id, $user_id){
+
+		global $pmpro_checkout_levels;
 		//get user object
 		$wp_user_object = new WP_User($user_id);
 		//ignore admins
 		if( in_array( 'administrator', $wp_user_object->roles ) )
 			return;
-		//downgrade time!
-		if( $level_id == 0 ) {
-			$wp_user_object->set_role('subscriber');
-		}
-		//set the role to our key
-		else {
-			$roles = get_option( 'pmpro_roles_'.$level_id );
-			if( !empty( $roles ) ){
-				foreach( $roles as $role_key => $role_name ){
-					$wp_user_object->set_role( $role_key );
+		
+		// Check if user is cancelling.
+		if( !empty( $_REQUEST['levelstocancel'] ) ) { //Adds support for MMPU
+			$level_id = intval( $_REQUEST['levelstocancel'] );
+			remove_role( 'pmpro_roles_'.$level_id );
+		} else if( $level_id == 0 ) {
+			$default_role = apply_filters( 'pmpro_roles_downgraded_role', get_option( 'default_role' ) );
+			$wp_user_object->set_role( $default_role );
+		} else {
+
+			if( !empty( $pmpro_checkout_levels ) ){
+				//Adds support for MMPU
+				foreach( $pmpro_checkout_levels as $co_level ){
+					$roles = get_option( 'pmpro_roles_'.$co_level->id );
+					if( is_array( $roles ) && ! empty( $roles ) ){
+						if ( count( $roles ) == 1 ) {
+							foreach( $roles as $role_key => $role_name ){
+								$wp_user_object->set_role( $role_key );
+							}
+						} else {
+							foreach( $roles as $role_key => $role_name ){
+								$wp_user_object->add_role( $role_key );
+							}
+						}
+					} else {
+						$wp_user_object->set_role( PMPRO_Roles::$role_key . $co_level->id );
+					}
 				}
-			} else {
-				$wp_user_object->set_role( PMPRO_Roles::$role_key . $level_id );
-			}
+			}			
 		}
 	}
 
@@ -188,7 +206,9 @@ class PMPRO_Roles {
 								
 								?>
 								<li>
-									<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?></label>
+									<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?>
+									<?php if ( $key == 'pmpro_role_' . $level_id ) { printf( esc_html( '( pmpro_role_%s )', 'pmpro-roles' ), $level_id ); } ?>
+									</label>
 								</li>
 								<?php
 							}
