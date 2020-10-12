@@ -55,14 +55,14 @@ class PMPRO_Roles {
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
 		
-		$capabilities = PMPRO_Roles::capabilities();
+		$capabilities = PMPRO_Roles::capabilities( PMPRO_Roles::$role_key.$saveid );
 
 		if( !empty( $_REQUEST['pmpro_roles_level'] ) ){
 
 			$level_roles = $_REQUEST['pmpro_roles_level'];
 
 			//created a new level
-			if( $_REQUEST['edit'] > 0 ) {
+			if( $_REQUEST['edit'] < 0 ) {
 				foreach( $level_roles as $role_key => $role_name ){
 					if ( $role_key === 'pmpro_role_'. $saveid ) {
 						$capabilities = PMPRO_Roles::capabilities( $role_key );
@@ -78,8 +78,8 @@ class PMPRO_Roles {
 				if(!is_array( $roles ) ) return;
 
 				foreach( $level_roles as $role_key => $role_name ){					
-
-					if(!isset( $roles[$role_key] ) ){
+					
+					if( !isset( $roles[$role_key] ) ){
 						$capabilities = PMPRO_Roles::capabilities( $role_key );
 						add_role( $role_key, $_REQUEST['name'], $capabilities[$role_key] );
 						return;
@@ -129,11 +129,16 @@ class PMPRO_Roles {
 		//ignore admins
 		if( in_array( 'administrator', $wp_user_object->roles ) )
 			return;
-		
+
 		// Check if user is cancelling.
 		if( !empty( $_REQUEST['levelstocancel'] ) ) { //Adds support for MMPU
-			$level_id = intval( $_REQUEST['levelstocancel'] );
-			remove_role( 'pmpro_roles_'.$level_id );
+			$levels_to_cancel = explode( " ", $_REQUEST['levelstocancel'] );
+			if( !empty( $levels_to_cancel ) ){
+				foreach( $levels_to_cancel as $ltc ){
+					$wp_user_object->remove_role( PMPRO_Roles::$role_key.intval( $ltc ) );		
+				}
+			}
+			
 		} else if( $level_id == 0 ) {
 			$default_role = apply_filters( 'pmpro_roles_downgraded_role', get_option( 'default_role' ) );
 			$wp_user_object->set_role( $default_role );
@@ -144,14 +149,8 @@ class PMPRO_Roles {
 				foreach( $pmpro_checkout_levels as $co_level ){
 					$roles = get_option( 'pmpro_roles_'.$co_level->id );
 					if( is_array( $roles ) && ! empty( $roles ) ){
-						if ( count( $roles ) == 1 ) {
-							foreach( $roles as $role_key => $role_name ){
-								$wp_user_object->set_role( $role_key );
-							}
-						} else {
-							foreach( $roles as $role_key => $role_name ){
-								$wp_user_object->add_role( $role_key );
-							}
+						foreach( $roles as $role_key => $role_name ){
+							$wp_user_object->add_role( $role_key );
 						}
 					} else {
 						$wp_user_object->set_role( PMPRO_Roles::$role_key . $co_level->id );
