@@ -90,7 +90,7 @@ class PMPRO_Roles {
 					}
 
 					if( ( strpos( $role_key, PMPRO_Roles::$role_key ) !== FALSE ) && sanitize_text_field( $_REQUEST['name'] ) !== $role_name ) {	
-						PMPRO_Roles::update_role( $role_key, sanitize_text_field( $_REQUEST['name'] ) );
+						PMPRO_Roles::update_role_name( $role_key, sanitize_text_field( $_REQUEST['name'] ) );
 					}
 					
 				}
@@ -130,26 +130,16 @@ class PMPRO_Roles {
 		}
 	}
 
-	function update_role( $role, $name ){
-
-		global $wpdb;
-
+	/** 
+	 * Update a PMPro Roles Name if level name changes.
+	 * @since 1.3
+	 */
+	function update_role_name( $role, $name ){
 		if( strpos( $role, PMPRO_Roles::$role_key ) !== FALSE ) {
-
 			$roles_array = get_option( 'wp_user_roles', true );
-
-			// if( !empty( $roles_array ) ){
-			// var_dump($role_key);
-
-				$roles_array[$role]['name'] = sanitize_text_field( $name );
-				// var_dump($roles_array[$role]['name']);
-				
-				$updated = update_option( 'wp_user_roles', $roles_array );
-				// exit();
-			// }
-
+			$roles_array[$role]['name'] = sanitize_text_field( $name );	
+			$updated = update_option( 'wp_user_roles', $roles_array );
 		}
-
 	}
 	
 	function user_change_level($level_id, $user_id){
