@@ -64,6 +64,10 @@ class PMPRO_Roles {
 			//created a new level
 			if( $_REQUEST['edit'] < 0 ) {
 				foreach( $level_roles as $role_key => $role_name ){
+					if( $role_key === 'pmpro_draft_role' ){
+						remove_role( 'pmpro_draft_role' );
+						add_role( PMPRO_Roles::$role_key.$saveid, sanitize_text_field( $_REQUEST['name'] ), array( 'read' => true ) );	
+					}
 					if ( $role_key === 'pmpro_role_'. $saveid ) {
 						$capabilities = PMPRO_Roles::capabilities( $role_key );
 						add_role( $role_key, $role_name, $capabilities );	
@@ -80,16 +84,21 @@ class PMPRO_Roles {
 				foreach( $level_roles as $role_key => $role_name ){					
 					
 					if( !isset( $roles[$role_key] ) ){
-						$capabilities = PMPRO_Roles::capabilities( $role_key );
-						add_role( $role_key, $_REQUEST['name'], $capabilities[$role_key] );
+						$capabilities = PMPRO_Roles::capabilities( $role_key );						
+						add_role( $role_key, sanitize_text_field( $_REQUEST['name'] ), $capabilities[$role_key] );
 						return;
 					}
 
-					remove_role( $role_key );
-
-					add_role( $role_key, $role_name, $capabilities );
-
+					if( ( strpos( $role_key, PMPRO_Roles::$role_key ) !== FALSE ) && sanitize_text_field( $_REQUEST['name'] ) !== $role_name ) {	
+						PMPRO_Roles::update_role( $role_key, sanitize_text_field( $_REQUEST['name'] ) );
+					}
+					
 				}
+			}
+
+			if( !empty( $level_roles['pmpro_draft_role'] ) ){
+				unset( $level_roles['pmpro_draft_role'] );
+				$level_roles[PMPRO_Roles::$role_key.$saveid] = sanitize_text_field( $_REQUEST['name'] );
 			}
 
 			update_option( 'pmpro_roles_'.$saveid, $level_roles );
@@ -120,6 +129,28 @@ class PMPRO_Roles {
 			
 		}
 	}
+
+	function update_role( $role, $name ){
+
+		global $wpdb;
+
+		if( strpos( $role, PMPRO_Roles::$role_key ) !== FALSE ) {
+
+			$roles_array = get_option( 'wp_user_roles', true );
+
+			// if( !empty( $roles_array ) ){
+			// var_dump($role_key);
+
+				$roles_array[$role]['name'] = sanitize_text_field( $name );
+				// var_dump($roles_array[$role]['name']);
+				
+				$updated = update_option( 'wp_user_roles', $roles_array );
+				// exit();
+			// }
+
+		}
+
+	}
 	
 	function user_change_level($level_id, $user_id){
 
@@ -143,7 +174,6 @@ class PMPRO_Roles {
 			$default_role = apply_filters( 'pmpro_roles_downgraded_role', get_option( 'default_role' ) );
 			$wp_user_object->set_role( $default_role );
 		} else {
-
 			if( !empty( $pmpro_checkout_levels ) ){
 				//Adds support for MMPU
 				foreach( $pmpro_checkout_levels as $co_level ){
@@ -156,7 +186,16 @@ class PMPRO_Roles {
 						$wp_user_object->set_role( PMPRO_Roles::$role_key . $co_level->id );
 					}
 				}
-			}			
+			} else if( isset( $_REQUEST['level'] ) ){
+				$roles = get_option( 'pmpro_roles_'.intval( $_REQUEST['level'] ) );
+				if( is_array( $roles ) && ! empty( $roles ) ){
+					foreach( $roles as $role_key => $role_name ){
+						$wp_user_object->add_role( $role_key );
+					}
+				} else {
+					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $_REQUEST['level'] ) );
+				}
+			}
 		}
 	}
 
@@ -170,6 +209,11 @@ class PMPRO_Roles {
 				<?php
 				
 				$level_id = absint( filter_input( INPUT_GET, 'edit', FILTER_DEFAULT ) );
+
+				//Check if a role has been created for this level
+				if( $_REQUEST['edit'] < 0 ) {
+					add_role( 'pmpro_draft_role', 'pmpro_role', array( 'read' => true ) );	
+				}
 
 				global $wp_roles;
 
@@ -198,7 +242,7 @@ class PMPRO_Roles {
 									}
 								}
 
-								if( isset( $saved_roles[$key] ) ){ 
+								if( isset( $saved_roles[$key] ) || ( $_REQUEST['edit'] < 0 && $key == 'pmpro_draft_role' ) ){ 
 									$checked = 'checked=true';
 								}
 
@@ -367,7 +411,7 @@ class PMPRO_Roles {
 		
 		foreach($roles as $key => $role) {
 			//is this a pmpro role?
-			if(strpos($key, PMPRO_Roles::$role_key) === 0) {				
+			if(strpos($key, PMPRO_Roles::$role_key) !== FALSE ) {				
 				//change all users with those roles to have the default role			
 				$users = get_users(array('role'=>$key));
 				foreach($users as $user) {
