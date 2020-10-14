@@ -1,9 +1,9 @@
 === Paid Memberships Pro - Roles Add On ===
 Contributors: strangerstudios, joshlevinson
 Tags: pmpro, paid memberships pro, membership, roles
-Requires at least: 3.0
-Tested up to: 5.4.1
-Stable tag: 1.2
+Requires at least: 4.5
+Tested up to: 5.5
+Stable tag: 1.3
 
 Adds a WordPress Role for each Membership Level.
 
@@ -45,6 +45,14 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at https://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.3 - 2020-10-14 =
+* ENHANCEMENT: Added options to level settings area to choose which roles members should receive when purchasing a level.
+* ENHANCEMENT: Supports members having multiple roles, and integration for Multiple Memberships Per User Add On.
+* ENHANCEMENT: Added localization (translations) and escaped all front-end strings.
+* ENHANCEMENT: Improved coding standards and docblocks for all functions.
+* ENHANCEMENT: New filter added for when member cancels, allows developers to set a unique user role when a member cancels. Filter: 'pmpro_roles_downgraded_role'
+* ENHANCEMENT: New filter added to allow developers to add/remove roles to the membership level settings checkboxes. By default this excludes the admin role. Filter: 'pmpro_roles_downgraded_role'.
+* REFACTOR: Reworked the delete_level function. Logic is still the same.
 
 = 1.2 - 2020-05-21 =
 * BUG FIX/ENHANCEMENT: Adding the "read" capability to all custom level roles by default. You can filter custom role capabilities using the `pmpro_roles_default_caps` filter.
