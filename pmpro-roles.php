@@ -179,9 +179,14 @@ class PMPRO_Roles {
 			} else if( isset( $_REQUEST['level'] ) ){
 				$roles = get_option( 'pmpro_roles_'.intval( $_REQUEST['level'] ) );
 				if( is_array( $roles ) && ! empty( $roles ) ){
-					foreach( $roles as $role_key => $role_name ){
-						$wp_user_object->add_role( $role_key );
+					if ( count( $roles ) !== 1 ) {
+						foreach( $roles as $role_key => $role_name ){
+							$wp_user_object->add_role( $role_key );
+						}
+					} else {
+						$wp_user_object->set_role( array_key_first( $roles ) ); //If only one role is set, set it to this instead of adding it to the user.
 					}
+					
 				} else {
 					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $_REQUEST['level'] ) );
 				}
