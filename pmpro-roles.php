@@ -5,10 +5,10 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.2
+ * Version: 1.3
  * License: GPL2
  * Text Domain: pmpro-roles
- * Domain Path: /pmpro-roles
+ * Domain Path: /languages
  */
 
 class PMPRO_Roles {
@@ -20,41 +20,58 @@ class PMPRO_Roles {
 	
 	function __construct(){
 		add_action( 'pmpro_save_membership_level', array( $this, 'edit_level' ) );
-		add_action( 'admin_head-toplevel_page_pmpro-membershiplevels', array( $this, 'delete_level' ) );
-		add_action("pmpro_after_change_membership_level", array($this, 'user_change_level'), 10, 2);
+		add_action( 'pmpro_delete_membership_level', array( $this, 'delete_level' ) );
+		add_action( 'pmpro_after_change_membership_level', array($this, 'user_change_level' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
-		add_action('wp_ajax_'.PMPRO_Roles::$ajaction, array( $this, 'install' ) );
-		add_filter('plugin_action_links_' . plugin_basename(__FILE__), array('PMPRO_Roles', 'add_action_links'));
+		add_action( 'wp_ajax_' . PMPRO_Roles::$ajaction, array( $this, 'install' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( 'PMPRO_Roles', 'add_action_links' ) );
 		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
-		add_action('admin_init', array('PMPRO_Roles', 'delete_and_deactivate'));
+		add_action( 'admin_init', array( 'PMPRO_Roles', 'delete_and_deactivate' ) );
 		add_action( 'pmpro_membership_level_after_other_settings', array( 'PMPRO_Roles', 'level_settings' ) );
 		add_filter( 'editable_roles', array( 'PMPRO_Roles', 'remove_list_roles' ), 10, 1 );
+		add_action( 'init', array( $this, 'load_text_domain' ) );
+	}
+
+	/** 
+	 * Load plugin text domain for translations.
+	 * @since 1.3
+	 */
+	function load_text_domain() {
+		load_plugin_textdomain( 'pmpro-roles', false, basename( dirname( __FILE__ ) ) . '/languages' ); 
 	}
 	
+	/**
+	 * Javascript for admin area.
+	 */
 	function enqueue_admin_scripts($hook) {
-		if( 'toplevel_page_pmpro-membershiplevels' != $hook )
-		return;
+		if( 'toplevel_page_pmpro-membershiplevels' != $hook ) {
+			return;
+		}
+
 		wp_enqueue_script( PMPRO_Roles::$plugin_prefix.'admin', plugin_dir_url( __FILE__ ) . '/admin.js' );
 		wp_enqueue_style( PMPRO_Roles::$plugin_prefix.'admin', plugin_dir_url( __FILE__ ) . '/admin.css' );
 		$nonce = wp_create_nonce( PMPRO_Roles::$ajaction );
 		$vars = array(
-			'desc' => __('Levels not matching up, or missing?', PMPRO_Roles::$plugin_slug),
-			'repair' => __('Repair', PMPRO_Roles::$plugin_slug),
-			'working' => __('Working...', PMPRO_Roles::$plugin_slug),
-			'done' => __('Done!', PMPRO_Roles::$plugin_slug),
-			'fixed'=> __(' role connections were needed/repaired.', PMPRO_Roles::$plugin_slug),
-			'failed'=> __('An error occurred while repairing roles.', PMPRO_Roles::$plugin_slug),
-			'ajaction'=>PMPRO_Roles::$ajaction,
-			'nonce'=>$nonce,
+			'desc' => esc_html__('Levels not matching up, or missing?', PMPRO_Roles::$plugin_slug ),
+			'repair' => esc_html__('Repair', PMPRO_Roles::$plugin_slug ),
+			'working' => esc_html__('Working...', PMPRO_Roles::$plugin_slug ),
+			'done' => esc_html__('Done!', PMPRO_Roles::$plugin_slug ),
+			'fixed' => esc_html__( 'role connections were needed/repaired.', PMPRO_Roles::$plugin_slug ),
+			'failed' => esc_html__( 'An error occurred while repairing roles.', PMPRO_Roles::$plugin_slug ),
+			'ajaction' => PMPRO_Roles::$ajaction,
+			'nonce' => $nonce,
 			);
 		$key = PMPRO_Roles::$plugin_prefix.'vars';
 		wp_localize_script( PMPRO_Roles::$plugin_prefix . 'admin', 'key', array( 'key'=>$key ) );
 		wp_localize_script( PMPRO_Roles::$plugin_prefix . 'admin', $key, $vars );
 	}
 	
+	/**
+	 * Settings for the edit level admin screen. Creates and saves role selection per level.
+	 * @since 1.3
+	 */
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
-		
 		$capabilities = PMPRO_Roles::capabilities( PMPRO_Roles::$role_key.$saveid );
 
 		if( !empty( $_REQUEST['pmpro_roles_level'] ) ){
@@ -107,27 +124,19 @@ class PMPRO_Roles {
 		
 	}
 	
-	function delete_level() {
-		//if there is no action, or if there is an action but it isn't deleting, return.
-		if( !isset( $_REQUEST['action'] ) || ( isset( $_REQUEST['action'] ) && $_REQUEST['action'] !== 'delete_membership_level' ) ) { return; }
-		$ml_id = $_REQUEST['deleteid'];
-		if($ml_id > 0){
-
-			//this will silently fail if the role doesn't exist, so we're fine.
-			$role_key = PMPRO_Roles::$role_key . $ml_id;
-			if( !empty( $role_key ) ){
-				remove_role( $role_key );
-			}
-			// ^Backwards compat. New delete loop below too
-			$roles = get_option( 'pmpro_roles_'.$ml_id );
-
-			if( !empty( $roles ) ){
-				foreach( $roles as $role_key => $role_name ){
-					remove_role( $role_key );
-				}
-			}			
-			
+	/**
+	 * Delete custom PMPro role on level delete.
+	 * @since 1.0
+	 */
+	function delete_level( $delete_id ) {
+		$role_key = PMPRO_Roles::$role_key . $delete_id;
+		if( !empty( $role_key ) ){
+			remove_role( $role_key );
 		}
+
+		delete_option( 'pmpro_roles_' . $delete_id );
+
+		do_action( 'pmpro_roles_delete_membership_level', $delete_id );	
 	}
 
 	/** 
@@ -142,6 +151,10 @@ class PMPRO_Roles {
 		}
 	}
 	
+	/**
+	 * Change user role based on level change. (Now supports MMPU)
+	 * @since 1.0
+	 */
 	function user_change_level($level_id, $user_id){
 
 		global $pmpro_checkout_levels;
@@ -194,11 +207,15 @@ class PMPRO_Roles {
 		}
 	}
 
+	/**
+	 * Show a list of all available roles as a checkbox inside level settings.
+	 * @since 1.3
+	 */
 	public static function level_settings() {
 		?>
 		<hr />
 		<h3><?php esc_html_e( 'Paid Memberships Pro - Roles', 'pmpro-roles' ); ?></h3>
-		<p><?php _e( "Choose which roles should be applied to this level.", 'pmpro-roles' ); ?></p>
+		<p><?php esc_html_e( 'Choose which roles should be applied to this level.', 'pmpro-roles' ); ?></p>
 		<table>
 			<tbody class="form-table">
 				<?php
@@ -223,7 +240,7 @@ class PMPRO_Roles {
 				if( !empty( $editable_roles ) ){
 					?>
 					<tr>
-						<th scope="row" valign="top"><label><?php _e('Select Roles For This Level', 'pmpro-roles'); ?>:</label></th>
+						<th scope="row" valign="top"><label><?php esc_html_e( 'Select Roles For This Level', 'pmpro-roles' ); ?>:</label></th>
 						<td>
 							<ul>
 							<?php
@@ -261,6 +278,10 @@ class PMPRO_Roles {
 		<?php
 	}
 
+	/**
+	 * Helper function to remove the administrator role from level settings.
+	 * @since 1.3
+	 */
 	public static function remove_list_roles( $roles ){
 
 		//Take admins out of the array first 
@@ -290,7 +311,10 @@ class PMPRO_Roles {
 
 	}
 
-	//activation function
+	/**
+	 * Initial function to run on install. Create roles for each existing level.
+	 * @since 1.0
+	 */
 	public static function install() {
 		
 		global $wpdb;
@@ -331,6 +355,10 @@ class PMPRO_Roles {
 		}
 	}
 
+	/**
+	 * Assign capabilities to custom roles.
+	 * @since 1.0
+	 */
 	public static function capabilities( $role_key = null ) {
 		$all_levels = pmpro_getAllLevels( true, false );
 		$capabilities = array();
@@ -362,12 +390,13 @@ class PMPRO_Roles {
 
 	/**
 	 * Add "Delete Roles and Deactivate" link to plugins page
+	 * @since 1.0
 	 */
 	public static function add_action_links($links) {	
 		// Only add this if plugin is active.
 		if( is_plugin_active( 'pmpro-roles/pmpro-roles.php' ) ) {
 			$new_links = array(
-				'<a href="' . wp_nonce_url(get_admin_url(NULL, 'plugins.php?pmpro_roles_delete_and_deactivate=1'), 'pmpro_roles_delete_and_deactivate') . '">' . __('Delete Roles and Deactivate', 'pmpro-roles') . '</a>',
+				'<a href="' . wp_nonce_url(get_admin_url(NULL, 'plugins.php?pmpro_roles_delete_and_deactivate=1'), 'pmpro_roles_delete_and_deactivate') . '">' . esc_html__( 'Delete Roles and Deactivate', 'pmpro-roles' ) . '</a>',
 			);
 			return array_merge($new_links, $links);
 		}
@@ -381,8 +410,8 @@ class PMPRO_Roles {
 	public static function plugin_row_meta( $links, $file ) {
 		if ( strpos( $file, 'pmpro-roles' ) !== false ) {
 			$new_links = array(
-				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-roles/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-roles' ) ) . '">' . __( 'Docs', 'pmpro-roles' ) . '</a>',
-				'<a href="' . esc_url( 'https://paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-roles' ) ) . '">' . __( 'Support', 'pmpro-roles' ) . '</a>',
+				'<a href="' . esc_url( 'https://www.paidmembershipspro.com/add-ons/pmpro-roles/' ) . '" title="' . esc_attr( __( 'View Documentation', 'pmpro-roles' ) ) . '">' . esc_html__( 'Docs', 'pmpro-roles' ) . '</a>',
+				'<a href="' . esc_url( 'https://paidmembershipspro.com/support/' ) . '" title="' . esc_attr( __( 'Visit Customer Support Forum', 'pmpro-roles' ) ) . '">' . esc_html__( 'Support', 'pmpro-roles' ) . '</a>',
 			);
 			$links     = array_merge( $links, $new_links );
 		}
@@ -403,14 +432,20 @@ class PMPRO_Roles {
 		//find roles based on levels
 		global $wpdb;
 		$roles = get_option( $wpdb->get_blog_prefix() . 'user_roles' );
-		
+
 		foreach($roles as $key => $role) {
 			//is this a pmpro role?
-			if(strpos($key, PMPRO_Roles::$role_key) !== FALSE ) {				
-				//change all users with those roles to have the default role			
-				$users = get_users(array('role'=>$key));
+			if(strpos($key, PMPRO_Roles::$role_key) !== FALSE ) {	
+				//change all users with those roles to have the default role		
+				$users = get_users( array( 'role' => $key ) );
+
 				foreach($users as $user) {
-					$user->set_role('subscriber');
+					if ( count( $user->roles ) > 1 ){
+						$user->remove_role( $key );
+					} else {
+						$default_role = apply_filters( 'pmpro_roles_downgraded_role', get_option( 'default_role' ) );
+						$user->set_role( $default_role );
+					}
 				}
 
 				//delete the roles
@@ -424,7 +459,7 @@ class PMPRO_Roles {
 		//output deactivated notice:
 		?>
 		<div id="message" class="updated notice is-dismissible">
-			<p><?php _e('Plugin <strong>deactivated</strong>');?>.</p><button type="button" class="notice-dismiss"><span class="screen-reader-text"><?php _e('Dismiss this notice.');?></span></button>
+			<p><?php esc_html_e( 'Plugin deactivated', 'pmpro-roles' );?>.</p><button type="button" class="notice-dismiss"><span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'pmpro-roles' );?></span></button>
 		</div>
 		<?php
 	}

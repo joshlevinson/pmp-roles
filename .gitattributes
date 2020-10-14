@@ -1,0 +1,2 @@
+.gitattributes export-ignore
+languages/gettext.sh export-ignore
