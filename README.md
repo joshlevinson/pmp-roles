@@ -6,7 +6,7 @@
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-red.svg?style=flat-square)
 
 ### Welcome to the Roles for Membership Levels GitHub Repository
-Add a description of the product here.
+Adds a new WordPress Role for each Membership Level. A member’s role will be set to the role for their membership level after checkout. Assign roles to members based on their membership level.
 
 For more information please visit [paidmembershipspro.com/add-ons/pmpro-roles/](https://www.paidmembershipspro.com/add-ons/pmpro-roles/)
 
