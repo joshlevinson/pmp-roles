@@ -165,7 +165,7 @@ class PMPRO_Roles {
 			return;
 
 		// Check if user is cancelling.
-		if( !empty( $_REQUEST['levelstocancel'] ) ) { //Adds support for MMPU
+		if( defined( 'PMPROMMPU_DIR' ) && !empty( $_REQUEST['levelstocancel'] ) ) { //Adds support for MMPU
 			$levels_to_cancel = explode( " ", $_REQUEST['levelstocancel'] );
 			if( !empty( $levels_to_cancel ) ){
 				foreach( $levels_to_cancel as $ltc ){
@@ -192,14 +192,14 @@ class PMPRO_Roles {
 			} else if( isset( $_REQUEST['level'] ) ){
 				$roles = get_option( 'pmpro_roles_'.intval( $_REQUEST['level'] ) );
 				if( is_array( $roles ) && ! empty( $roles ) ){
-					$cnt = 1;
+					$count = 1;
 					foreach( $roles as $role_key => $role_name ){
-						if( $cnt == 1 ){
+						if( $count == 1 ){
 							$wp_user_object->set_role( $role_key );
 						} else {
 							$wp_user_object->add_role( $role_key );
 						}
-						$cnt++;							
+						$count++;							
 					}
 				} else {
 					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $_REQUEST['level'] ) );
