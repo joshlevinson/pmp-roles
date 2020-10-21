@@ -215,7 +215,7 @@ class PMPRO_Roles {
 		?>
 		<hr />
 		<h3><?php esc_html_e( 'Paid Memberships Pro - Roles', 'pmpro-roles' ); ?></h3>
-		<p><?php esc_html_e( 'Choose which roles should be applied to this level.', 'pmpro-roles' ); ?></p>
+		<p><?php esc_html_e( 'Selected roles will only be applied to members who sign up after changes have been made.', 'pmpro-roles' ); ?></p>
 		<table>
 			<tbody class="form-table">
 				<?php
