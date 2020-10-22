@@ -214,10 +214,22 @@ class PMPRO_Roles {
 	public static function level_settings() {
 		?>
 		<hr />
-		<h3><?php esc_html_e( 'Paid Memberships Pro - Roles', 'pmpro-roles' ); ?></h3>
-		<p><?php esc_html_e( 'Selected roles will only be applied to members who sign up after changes have been made.', 'pmpro-roles' ); ?></p>
-		<table>
-			<tbody class="form-table">
+
+		<h3><?php esc_html_e( 'Role Settings', 'pmpro-roles' ); ?></h3>
+		<p class="description">
+			<?php
+				$allowed_pmpro_roles_description_html = array (
+					'a' => array (
+						'href' => array(),
+						'target' => array(),
+						'title' => array(),
+					),
+				);
+				echo sprintf( wp_kses( __( 'Choose one or more roles to be assigned for members of this level. <a href="%s" title="Paid Memberships Pro - Roles Add On" target="_blank">Visit the documentation page</a> for more information.', 'pmpro-roles' ), $allowed_pmpro_roles_description_html ), 'https://www.paidmembershipspro.com/add-ons/pmpro-roles//?utm_source=plugin&utm_medium=pmpro-membershiplevels&utm_campaign=add-ons&utm_content=pmpro-roles' );
+			?>
+		</p>
+		<table class="form-table">
+			<tbody>
 				<?php
 				
 				$level_id = absint( filter_input( INPUT_GET, 'edit', FILTER_DEFAULT ) );
@@ -235,7 +247,7 @@ class PMPRO_Roles {
 				if( !empty( $editable_roles ) ){
 					?>
 					<tr>
-						<th scope="row" valign="top"><label><?php esc_html_e( 'Select Roles For This Level', 'pmpro-roles' ); ?>:</label></th>
+						<th scope="row" valign="top"><label><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?>:</label></th>
 						<td>
 							<div class="checkbox_box" <?php if( count( $editable_roles ) > 5 ) { ?>style="height: 150px; overflow: auto; padding: 0 10px;"<?php } ?>>
 								<ul>
@@ -297,8 +309,17 @@ class PMPRO_Roles {
 									
 								}
 								?>
-								</ul>
-							</div>
+								<li>
+									<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?>
+									<?php if ( ! empty( $key ) && $key != 'pmpro_draft_role' ) { ?>
+										<code><?php echo $key; ?></code>
+									<?php } ?>
+									</label>
+								</li>
+								<?php
+							}
+							?>
+							</ul>
 						</td>
 					<?php
 				}
