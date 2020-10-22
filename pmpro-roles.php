@@ -275,8 +275,8 @@ class PMPRO_Roles {
 								if( isset( $editable_roles[$custom_pmpro_role] ) ){
 									?>
 									<li>
-										<input type='checkbox' name='pmpro_roles_level[<?php echo $custom_pmpro_role; ?>]' value='<?php echo stripslashes( $editable_roles[$custom_pmpro_role]["name"] ); ?>' id='<?php echo $custom_pmpro_role; ?>' <?php echo $checked; ?> /> <label for='<?php echo $custom_pmpro_role; ?>'><?php echo stripslashes( $editable_roles[$custom_pmpro_role]['name'] ); ?>
-										<?php printf( "<code>".esc_html( 'pmpro_role_%s', 'pmpro-roles' )."</code>", $level_id ); ?>
+										<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $custom_pmpro_role ); ?>]' value='<?php echo stripslashes( $editable_roles[$custom_pmpro_role]["name"] ); ?>' id='<?php echo esc_attr( $custom_pmpro_role ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $custom_pmpro_role ); ?>'><?php echo stripslashes( $editable_roles[$custom_pmpro_role]['name'] ); ?>
+										<?php printf( "<code>" . esc_html( 'pmpro_role_%s', 'pmpro-roles' ) . "</code>", $level_id ); ?>
 										</label>
 									</li>
 									<hr/>
@@ -298,8 +298,8 @@ class PMPRO_Roles {
 									if ( $key != 'pmpro_role_' . $level_id ) { //Show this one first
 										?>
 										<li>
-											<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?>
-											<?php printf( "<code>".$key."</code>", $level_id ); ?>
+											<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $key ); ?>'><?php echo stripslashes( $role['name'] ); ?>
+											<?php echo "<code>". esc_html( $key ). "</code>"; ?>
 											</label>
 										</li>
 										<?php
