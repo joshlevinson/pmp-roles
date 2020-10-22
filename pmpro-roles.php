@@ -81,8 +81,7 @@ class PMPRO_Roles {
 			//created a new level
 			if( $_REQUEST['edit'] < 0 ) {
 				foreach( $level_roles as $role_key => $role_name ){
-					if( $role_key === 'pmpro_draft_role' ){
-						remove_role( 'pmpro_draft_role' );
+					if( $role_key === 'pmpro_draft_role' ){						
 						add_role( PMPRO_Roles::$role_key.$saveid, sanitize_text_field( $_REQUEST['name'] ), array( 'read' => true ) );	
 					}
 					if ( $role_key === 'pmpro_role_'. $saveid ) {
@@ -215,6 +214,7 @@ class PMPRO_Roles {
 	public static function level_settings() {
 		?>
 		<hr />
+
 		<h3><?php esc_html_e( 'Role Settings', 'pmpro-roles' ); ?></h3>
 		<p class="description">
 			<?php
@@ -234,11 +234,6 @@ class PMPRO_Roles {
 				
 				$level_id = absint( filter_input( INPUT_GET, 'edit', FILTER_DEFAULT ) );
 
-				//Check if a role has been created for this level
-				if( $_REQUEST['edit'] < 0 ) {
-					add_role( 'pmpro_draft_role', 'pmpro_role', array( 'read' => true ) );	
-				}
-
 				global $wp_roles;
 
 			    $all_roles = $wp_roles->roles;
@@ -254,39 +249,70 @@ class PMPRO_Roles {
 					<tr>
 						<th scope="row" valign="top"><label><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?>:</label></th>
 						<td>
-							<ul>
-							<?php
-							foreach( $editable_roles as $key => $role ){
+							<div class="checkbox_box" <?php if( count( $editable_roles ) > 5 ) { ?>style="height: 150px; overflow: auto; padding: 0 10px;"<?php } ?>>
+								<ul>
+								<?php
 
-								$checked = '';
-								//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
-								if( empty( $saved_roles ) ){
-									if( PMPRO_Roles::$role_key.$level_id == $key ){
-										$checked = 'checked=true';
-									}
+								//New level, choose if they want to create a role for this level
+								if( $_REQUEST['edit'] < 0 ) {
+									?>
+									<li>
+										<input type='checkbox' name='pmpro_roles_level[pmpro_draft_role]' value='pmpro_draft_role' id='pmpro_draft_role' /> <label for='pmpro_draft_role'><?php _e('Create a new custom role for this membership level', 'pmpro-roles'); ?>
+										</label>
+									</li>
+									<hr/>
+									<?php
 								}
 
-								if( isset( $saved_roles[$key] ) || ( $_REQUEST['edit'] < 0 && $key == 'pmpro_draft_role' ) ){ 
+								$custom_pmpro_role = PMPRO_Roles::$role_key.$level_id;
+
+								$checked = '';
+
+								if( isset( $saved_roles[$custom_pmpro_role] ) ){
 									$checked = 'checked=true';
 								}
 
-								
+								if( isset( $editable_roles[$custom_pmpro_role] ) ){
+									?>
+									<li>
+										<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $custom_pmpro_role ); ?>]' value='<?php echo stripslashes( $editable_roles[$custom_pmpro_role]["name"] ); ?>' id='<?php echo esc_attr( $custom_pmpro_role ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $custom_pmpro_role ); ?>'><?php echo stripslashes( $editable_roles[$custom_pmpro_role]['name'] ); ?>
+										<?php printf( "<code>" . esc_html( 'pmpro_role_%s', 'pmpro-roles' ) . "</code>", $level_id ); ?>
+										</label>
+									</li>
+									<hr/>
+									<?php
+								}
+								foreach( $editable_roles as $key => $role ){
+									$checked = '';
+									//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
+									if( empty( $saved_roles ) ){
+										if( PMPRO_Roles::$role_key.$level_id == $key ){
+											$checked = 'checked=true';
+										}
+									}
+
+									if( isset( $saved_roles[$key] ) ){ 
+										$checked = 'checked=true';
+									}
+
+									if ( $key != 'pmpro_role_' . $level_id ) { //Show this one first
+										?>
+										<li>
+											<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $key ); ?>'><?php echo stripslashes( $role['name'] ); ?>
+											<?php echo "<code>". esc_html( $key ). "</code>"; ?>
+											</label>
+										</li>
+										<?php
+									}
+									
+								}
 								?>
-								<li>
-									<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?>
-									<?php if ( ! empty( $key ) && $key != 'pmpro_draft_role' ) { ?>
-										<code><?php echo $key; ?></code>
-									<?php } ?>
-									</label>
-								</li>
 								<?php
 							}
 							?>
+							</div>
 							</ul>
 						</td>
-					<?php
-				}
-				?>
 			</tbody>
 		</table>
 		<?php
