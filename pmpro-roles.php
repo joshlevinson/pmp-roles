@@ -282,9 +282,7 @@ class PMPRO_Roles {
 									<hr/>
 									<?php
 								}
-
 								foreach( $editable_roles as $key => $role ){
-
 									$checked = '';
 									//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
 									if( empty( $saved_roles ) ){
@@ -309,21 +307,12 @@ class PMPRO_Roles {
 									
 								}
 								?>
-								<li>
-									<input type='checkbox' name='pmpro_roles_level[<?php echo $key; ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo $key; ?>' <?php echo $checked; ?> /> <label for='<?php echo $key; ?>'><?php echo stripslashes( $role['name'] ); ?>
-									<?php if ( ! empty( $key ) && $key != 'pmpro_draft_role' ) { ?>
-										<code><?php echo $key; ?></code>
-									<?php } ?>
-									</label>
-								</li>
 								<?php
 							}
 							?>
+							</div>
 							</ul>
 						</td>
-					<?php
-				}
-				?>
 			</tbody>
 		</table>
 		<?php
