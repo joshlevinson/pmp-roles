@@ -45,7 +45,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at https://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
-= 1.3 - 2020-10-14 =
+= 1.3 - 2020-10-26 =
 * ENHANCEMENT: Added options to level settings area to choose which roles members should receive when purchasing a level.
 * ENHANCEMENT: Supports members having multiple roles, and integration for Multiple Memberships Per User Add On.
 * ENHANCEMENT: Added localization (translations) and escaped all front-end strings.
