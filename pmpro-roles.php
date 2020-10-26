@@ -249,7 +249,7 @@ class PMPRO_Roles {
 					<tr>
 						<th scope="row" valign="top"><label><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?>:</label></th>
 						<td>
-							<div class="checkbox_box" <?php if( count( $editable_roles ) > 5 ) { ?>style="height: 150px; overflow: auto; padding: 0 10px;"<?php } ?>>
+							<div class="checkbox_box" <?php if( count( $editable_roles ) > 5 ) { ?>style="height: 150px; overflow: auto; padding: 0px 10px;"<?php } ?>>
 								<ul>
 								<?php
 
