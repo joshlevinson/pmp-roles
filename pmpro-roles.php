@@ -324,9 +324,6 @@ class PMPRO_Roles {
 	 */
 	public static function remove_list_roles( $roles ){
 
-		//Take admins out of the array first 
-		unset( $roles['administrator'] );
-
 		if( !function_exists( 'pmpro_getAllLevels' ) ){
 			return $roles;
 		}
@@ -336,6 +333,9 @@ class PMPRO_Roles {
 			$edit_level = intval( $_REQUEST['edit'] );
 
 			$all_levels = pmpro_getAllLevels( true, false );
+
+				//Take admins out of the array first 
+				unset( $roles['administrator'] );
 
 			foreach( $all_levels as $level_key => $level ){
 				if( $level_key !== $edit_level ){
