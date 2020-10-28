@@ -5,7 +5,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.3
+ * Version: 1.3.1
  * License: GPL2
  * Text Domain: pmpro-roles
  * Domain Path: /languages
@@ -334,8 +334,8 @@ class PMPRO_Roles {
 
 			$all_levels = pmpro_getAllLevels( true, false );
 
-				//Take admins out of the array first 
-				unset( $roles['administrator'] );
+			//Take admins out of the array first 
+			unset( $roles['administrator'] );
 
 			foreach( $all_levels as $level_key => $level ){
 				if( $level_key !== $edit_level ){
