@@ -46,7 +46,7 @@ Please visit our premium support site at https://www.paidmembershipspro.com for 
 
 == Changelog ==
 = 1.3.1 - 2020-10-28 =
-* BUG FIX: Fixed issue where accidently removed administrator role from edit user profile page while plugin is active.
+* BUG FIX: Fixed issue where accidentaly removed administrator role from edit user profile page while plugin is active.
 
 = 1.3 - 2020-10-26 =
 * ENHANCEMENT: Added options to level settings area to choose which roles members should receive when purchasing a level.
