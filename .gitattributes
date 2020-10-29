@@ -2,3 +2,4 @@
 languages/gettext.sh export-ignore
 README.md export-ignore
 roles-for-membership-levels.jpg export-ignore
+.github export-ignore
