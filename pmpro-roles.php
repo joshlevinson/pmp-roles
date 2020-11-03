@@ -5,7 +5,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.3
+ * Version: 1.3.1
  * License: GPL2
  * Text Domain: pmpro-roles
  * Domain Path: /languages
@@ -190,8 +190,8 @@ class PMPRO_Roles {
 						$wp_user_object->set_role( PMPRO_Roles::$role_key . $co_level->id );
 					}
 				}
-			} else if( isset( $_REQUEST['level'] ) ){
-				$roles = get_option( 'pmpro_roles_'.intval( $_REQUEST['level'] ) );
+			} else if( $level_id > 0 ){
+				$roles = get_option( 'pmpro_roles_'.intval( $level_id ) );
 				if( is_array( $roles ) && ! empty( $roles ) ){
 					$count = 1;
 					foreach( $roles as $role_key => $role_name ){
@@ -203,7 +203,7 @@ class PMPRO_Roles {
 						$count++;							
 					}
 				} else {
-					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $_REQUEST['level'] ) );
+					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $level_id ) );
 				}
 			}
 		}
