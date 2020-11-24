@@ -5,7 +5,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.3.1
+ * Version: 1.3.2
  * License: GPL2
  * Text Domain: pmpro-roles
  * Domain Path: /languages
@@ -145,8 +145,10 @@ class PMPRO_Roles {
 	function update_role_name( $role, $name ){
 		if( strpos( $role, PMPRO_Roles::$role_key ) !== FALSE ) {
 			$roles_array = get_option( 'wp_user_roles', true );
-			$roles_array[$role]['name'] = sanitize_text_field( $name );	
-			$updated = update_option( 'wp_user_roles', $roles_array );
+			if( !empty( $roles_array[$role] ) ){
+				$roles_array[$role]['name'] = sanitize_text_field( $name );	
+				$updated = update_option( 'wp_user_roles', $roles_array );
+			}
 		}
 	}
 	
@@ -188,8 +190,8 @@ class PMPRO_Roles {
 						$wp_user_object->set_role( PMPRO_Roles::$role_key . $co_level->id );
 					}
 				}
-			} else if( isset( $_REQUEST['level'] ) ){
-				$roles = get_option( 'pmpro_roles_'.intval( $_REQUEST['level'] ) );
+			} else if( $level_id > 0 ){
+				$roles = get_option( 'pmpro_roles_'.intval( $level_id ) );
 				if( is_array( $roles ) && ! empty( $roles ) ){
 					$count = 1;
 					foreach( $roles as $role_key => $role_name ){
@@ -201,7 +203,7 @@ class PMPRO_Roles {
 						$count++;							
 					}
 				} else {
-					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $_REQUEST['level'] ) );
+					$wp_user_object->set_role( PMPRO_Roles::$role_key.intval( $level_id ) );
 				}
 			}
 		}
@@ -282,6 +284,9 @@ class PMPRO_Roles {
 									<hr/>
 									<?php
 								}
+
+								$exclude_other_pmpro_roles = apply_filters( 'pmpro_roles_exclude_other_pmpro_roles', true, $level_id );
+
 								foreach( $editable_roles as $key => $role ){
 									$checked = '';
 									//Backwards compat here, if $saved_roles is empty, set the default level's role as checked
@@ -295,7 +300,20 @@ class PMPRO_Roles {
 										$checked = 'checked=true';
 									}
 
-									if ( $key != 'pmpro_role_' . $level_id ) { //Show this one first
+
+									if( $exclude_other_pmpro_roles ){
+										//excluding the pmpro_role_ roles here
+										if ( $key != 'pmpro_role_' . $level_id ) { //Show this one first
+											?>
+											<li>
+												<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $key ); ?>'><?php echo stripslashes( $role['name'] ); ?>
+												<?php echo "<code>". esc_html( $key ). "</code>"; ?>
+												</label>
+											</li>
+											<?php
+										}
+									} else {
+										//include all roles. No checks needed
 										?>
 										<li>
 											<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo stripslashes( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $key ); ?>'><?php echo stripslashes( $role['name'] ); ?>
@@ -304,7 +322,7 @@ class PMPRO_Roles {
 										</li>
 										<?php
 									}
-									
+																		
 								}
 								?>
 								<?php
@@ -334,8 +352,10 @@ class PMPRO_Roles {
 
 			$all_levels = pmpro_getAllLevels( true, false );
 
-			//Take admins out of the array first 
-			unset( $roles['administrator'] );
+			if( apply_filters( 'pmpro_roles_hide_admin_role', true, $edit_level ) ){
+				//Take admins out of the array first 
+				unset( $roles['administrator'] );
+			}
 
 			foreach( $all_levels as $level_key => $level ){
 				if( $level_key !== $edit_level ){
