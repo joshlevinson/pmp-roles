@@ -5,7 +5,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.3.2
+ * Version: 1.4
  * License: GPL2
  * Text Domain: pmpro-roles
  * Domain Path: /languages
@@ -21,7 +21,12 @@ class PMPRO_Roles {
 	function __construct(){
 		add_action( 'pmpro_save_membership_level', array( $this, 'edit_level' ) );
 		add_action( 'pmpro_delete_membership_level', array( $this, 'delete_level' ) );
-		add_action( 'pmpro_after_change_membership_level', array($this, 'user_change_level' ), 10, 2 );
+		if ( version_compare( '2.5.8', PMPRO_VERSION, '>' ) ) {
+			// Use legacy functionality to update roles on level change.
+			add_action( 'pmpro_after_change_membership_level', array($this, 'user_change_level' ), 10, 2 );
+		} else {
+			add_action( 'pmpro_after_all_membership_level_changes', array( $this, 'after_all_level_changes' ), 10, 1 );
+		}
 		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
 		add_action( 'wp_ajax_' . PMPRO_Roles::$ajaction, array( $this, 'install' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( 'PMPRO_Roles', 'add_action_links' ) );
@@ -151,9 +156,83 @@ class PMPRO_Roles {
 			}
 		}
 	}
+
+	/**
+	 * Update users' roles after their membership levels are changed.
+	 *
+	 * @param array $old_user_levels $user_id => array $old_levels
+	 */
+	function after_all_level_changes( $old_user_levels ) {
+		foreach ( $old_user_levels as $user_id => $old_levels ) {
+			// Get the user who changed levels.
+			$user = new WP_User( $user_id );
+
+			// Ignore administrators.
+			if ( in_array( 'administrator', $user->roles ) ) {
+				continue;
+			}
+
+			// Get the user's current active membership levels.
+			$new_levels = pmpro_getMembershipLevelsForUser( $user_id );
+	
+			$new_roles = array();
+			$old_roles = array();
+	
+			// Build an array of all roles assigned to the user's old membership levels.
+			foreach ( $old_levels as $old_level ) {
+				$old_level_roles = get_option( 'pmpro_roles_' . $old_level->id );
+				if ( ! empty( $old_level_roles ) && is_array( $old_level_roles ) ) {
+					$old_roles = array_merge( $old_roles, array_keys( $old_level_roles ) );
+				}
+			}
+	
+			// Build an array of all roles assigned to the user's new membership levels.
+			foreach ( $new_levels as $new_level ) {
+				$new_level_roles = get_option( 'pmpro_roles_' . $new_level->id );
+				if ( ! empty( $new_level_roles ) && is_array( $new_level_roles ) ) {
+					$new_roles = array_merge( $new_roles, array_keys( $new_level_roles ) );
+				}
+			}
+	
+			// Remove duplicates in the array of old and new roles.
+			$old_roles = array_unique( $old_roles );		
+			$new_roles = array_unique( $new_roles );
+	
+			// Build a unique array of roles to add and remove from user.
+			$add_roles = $new_roles;
+			$remove_roles = array_values( array_diff( $old_roles, $new_roles ) );
+
+			// Add roles to user.
+			foreach ( $add_roles as $add_role ) {
+				$user->add_role( $add_role );
+			}
+	
+			// Remove roles from user.
+			foreach ( $remove_roles as $remove_role ) {
+				$user->remove_role( $remove_role );
+			}
+
+			// Handle case where role can be "simplified" to a single role.
+			$default_role = apply_filters( 'pmpro_roles_downgraded_role', get_option( 'default_role' ) );
+			if ( in_array( $default_role, $user->roles, true ) && count( $user->roles ) == 2 ) {
+				$user->remove_role( $default_role );
+			}
+
+			// Handle case where user has no role.
+			if ( empty( $user->roles ) ) {
+				$user->add_role( $default_role );
+			}
+
+			// Allows user's to be inside the foreach loop and hook in to do things.
+			do_action( 'pmpro_roles_after_role_change', $user, $old_user_levels, $old_roles, $new_roles );
+
+		}
+	}
 	
 	/**
 	 * Change user role based on level change. (Now supports MMPU)
+	 * No longer being used if PMPro version >= 2.5.8.
+	 *
 	 * @since 1.0
 	 */
 	function user_change_level($level_id, $user_id){
@@ -270,7 +349,7 @@ class PMPRO_Roles {
 
 								$checked = '';
 
-								if( isset( $saved_roles[$custom_pmpro_role] ) ){
+								if( isset( $saved_roles[$custom_pmpro_role] ) || empty( $saved_roles ) ){
 									$checked = 'checked=true';
 								}
 
