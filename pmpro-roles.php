@@ -224,7 +224,7 @@ class PMPRO_Roles {
 			}
 
 			// Allows user's to be inside the foreach loop and hook in to do things.
-			do_action( 'pmpro_roles_after_role_change', $user, $old_user_levels );
+			do_action( 'pmpro_roles_after_role_change', $user, $old_user_levels, $old_roles, $new_roles );
 
 		}
 	}
