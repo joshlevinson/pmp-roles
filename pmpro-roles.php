@@ -222,6 +222,10 @@ class PMPRO_Roles {
 			if ( empty( $user->roles ) ) {
 				$user->add_role( $default_role );
 			}
+
+			// Allows user's to be inside the foreach loop and hook in to do things.
+			do_action( 'pmpro_roles_after_role_change', $user, $old_user_levels );
+
 		}
 	}
 	
