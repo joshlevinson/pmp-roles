@@ -270,7 +270,7 @@ class PMPRO_Roles {
 
 								$checked = '';
 
-								if( isset( $saved_roles[$custom_pmpro_role] ) ){
+								if( isset( $saved_roles[$custom_pmpro_role] ) || empty( $saved_roles ) ){
 									$checked = 'checked=true';
 								}
 
