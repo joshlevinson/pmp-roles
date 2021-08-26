@@ -109,7 +109,7 @@ class PMPRO_Roles {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
 		$capabilities = self::capabilities( self::$role_key . $saveid );
 
-		if( !empty( $_REQUEST['pmpro_roles_level_present'] ) ){
+		if ( ! empty( $_REQUEST['pmpro_roles_level_present'] ) ) {
 
 			if ( ! empty( $_REQUEST['pmpro_roles_level'] ) ) {
 				$level_roles = $_REQUEST['pmpro_roles_level'];
