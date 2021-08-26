@@ -87,14 +87,14 @@ class PMPRO_Roles {
 			return array();
 		}		
 		
-		$roles = get_option( PMPro_Roles::$plugin_prefix . $level_id );
+		$roles = get_option( self::$plugin_prefix . $level_id );
 		
 		// Default to the role created for this level.
 		if ( empty( $roles ) ) {			
 			$roles = array();			
 			$level = pmpro_getLevel( $level_id );
 			if ( ! empty( $level ) ) {
-				$roles[PMPro_Roles::$role_key . $level_id] = $level->name;
+				$roles[ self::$role_key . $level_id ] = $level->name;
 			}			
 		}
 		
@@ -107,7 +107,7 @@ class PMPRO_Roles {
 	 */
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
-		$capabilities = PMPRO_Roles::capabilities( PMPRO_Roles::$role_key.$saveid );
+		$capabilities = self::capabilities( self::$role_key . $saveid );
 
 		if( !empty( $_REQUEST['pmpro_roles_level_present'] ) ){
 
@@ -116,7 +116,7 @@ class PMPRO_Roles {
 			} else {
 				// If no role chosen, use the default.
 				$level_roles = array();
-				$level_roles[PMPro_Roles::$role_key . $saveid] = sanitize_text_field( $_REQUEST['name'] );
+				$level_roles[ self::$role_key . $saveid ] = sanitize_text_field( $_REQUEST['name'] );
 			}
 
 			//created a new level
@@ -216,7 +216,7 @@ class PMPRO_Roles {
 	
 			// Build an array of all roles assigned to the user's old membership levels.
 			foreach ( $old_levels as $old_level ) {
-				$old_level_roles = PMPro_Roles::get_roles_for_level( $old_level->id );
+				$old_level_roles = self::get_roles_for_level( $old_level->id );
 				if ( ! empty( $old_level_roles ) && is_array( $old_level_roles ) ) {
 					$old_roles = array_merge( $old_roles, array_keys( $old_level_roles ) );
 				}
@@ -224,7 +224,7 @@ class PMPRO_Roles {
 	
 			// Build an array of all roles assigned to the user's new membership levels.
 			foreach ( $new_levels as $new_level ) {
-				$new_level_roles = PMPro_Roles::get_roles_for_level( $new_level->id );
+				$new_level_roles = self::get_roles_for_level( $new_level->id );
 				if ( ! empty( $new_level_roles ) && is_array( $new_level_roles ) ) {
 					$new_roles = array_merge( $new_roles, array_keys( $new_level_roles ) );
 				}
@@ -296,7 +296,7 @@ class PMPRO_Roles {
 			if( !empty( $pmpro_checkout_levels ) ){
 				//Adds support for MMPU
 				foreach( $pmpro_checkout_levels as $co_level ){
-					$roles = PMPro_Roles::get_roles_for_level( $co_level->id );
+					$roles = self::get_roles_for_level( $co_level->id );
 					if( is_array( $roles ) && ! empty( $roles ) ){
 						foreach( $roles as $role_key => $role_name ){
 							$wp_user_object->add_role( $role_key );
@@ -306,7 +306,7 @@ class PMPRO_Roles {
 					}
 				}
 			} else if( $level_id > 0 ){
-				$roles = PMPro_Roles::get_roles_for_level( $level_id );				
+				$roles = self::get_roles_for_level( $level_id );
 				if( is_array( $roles ) && ! empty( $roles ) ){
 					$count = 1;
 					foreach( $roles as $role_key => $role_name ){
@@ -357,7 +357,7 @@ class PMPRO_Roles {
 
 			    $editable_roles = apply_filters('editable_roles', $all_roles);
 
-			    $saved_roles = PMPro_Roles::get_roles_for_level( $level_id );
+			    $saved_roles = self::get_roles_for_level( $level_id );
 				
 			    asort( $editable_roles ); //Display alphabetically
 
