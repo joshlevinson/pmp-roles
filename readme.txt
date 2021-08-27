@@ -45,7 +45,8 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at https://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
-= 1.4.1 - 2021-08-26 =
+= 1.4.1 - 2021-08-30 =
+* BUG FIX/ENHANCEMENT: Checkbox list scrollbars are now more noticeable on MacOS.
 * BUG FIX: Fixed issue where level role settings weren't being honored sometimes if the default level role was selected.
 
 = 1.4 - 2021-08-18 =
