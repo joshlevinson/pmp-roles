@@ -5,7 +5,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.4
+ * Version: 1.4.1
  * License: GPL2
  * Text Domain: pmpro-roles
  * Domain Path: /languages
@@ -72,16 +72,52 @@ class PMPRO_Roles {
 	}
 	
 	/**
+	 * Get an array of roles set for a given level.
+	 * @since 1.4.1
+	 * @param int $level_id The ID of the level to check for.
+	 */
+	public static function get_roles_for_level( $level_id ) {
+		// In case a level object is passed in.
+		if ( is_object( $level_id ) && ! empty( $level_id->id ) ) {
+			$level_id = $level_id->id;
+		}
+
+		// Fail if no level.
+		if ( empty( $level_id ) ) {
+			return array();
+		}		
+		
+		$roles = get_option( self::$plugin_prefix . $level_id );
+		
+		// Default to the role created for this level.
+		if ( empty( $roles ) ) {			
+			$roles = array();			
+			$level = pmpro_getLevel( $level_id );
+			if ( ! empty( $level ) ) {
+				$roles[ self::$role_key . $level_id ] = $level->name;
+			}			
+		}
+		
+		return $roles;
+	}
+	
+	/**
 	 * Settings for the edit level admin screen. Creates and saves role selection per level.
 	 * @since 1.3
 	 */
 	function edit_level( $saveid ) {
 		//by being here, we know we already have the $_REQUEST we need, so no need to check.
-		$capabilities = PMPRO_Roles::capabilities( PMPRO_Roles::$role_key.$saveid );
+		$capabilities = self::capabilities( self::$role_key . $saveid );
 
-		if( !empty( $_REQUEST['pmpro_roles_level'] ) ){
+		if ( ! empty( $_REQUEST['pmpro_roles_level_present'] ) ) {
 
-			$level_roles = $_REQUEST['pmpro_roles_level'];
+			if ( ! empty( $_REQUEST['pmpro_roles_level'] ) ) {
+				$level_roles = $_REQUEST['pmpro_roles_level'];
+			} else {
+				// If no role chosen, use the default.
+				$level_roles = array();
+				$level_roles[ self::$role_key . $saveid ] = sanitize_text_field( $_REQUEST['name'] );
+			}
 
 			//created a new level
 			if( $_REQUEST['edit'] < 0 ) {
@@ -180,7 +216,7 @@ class PMPRO_Roles {
 	
 			// Build an array of all roles assigned to the user's old membership levels.
 			foreach ( $old_levels as $old_level ) {
-				$old_level_roles = get_option( 'pmpro_roles_' . $old_level->id );
+				$old_level_roles = self::get_roles_for_level( $old_level->id );
 				if ( ! empty( $old_level_roles ) && is_array( $old_level_roles ) ) {
 					$old_roles = array_merge( $old_roles, array_keys( $old_level_roles ) );
 				}
@@ -188,7 +224,7 @@ class PMPRO_Roles {
 	
 			// Build an array of all roles assigned to the user's new membership levels.
 			foreach ( $new_levels as $new_level ) {
-				$new_level_roles = get_option( 'pmpro_roles_' . $new_level->id );
+				$new_level_roles = self::get_roles_for_level( $new_level->id );
 				if ( ! empty( $new_level_roles ) && is_array( $new_level_roles ) ) {
 					$new_roles = array_merge( $new_roles, array_keys( $new_level_roles ) );
 				}
@@ -260,7 +296,7 @@ class PMPRO_Roles {
 			if( !empty( $pmpro_checkout_levels ) ){
 				//Adds support for MMPU
 				foreach( $pmpro_checkout_levels as $co_level ){
-					$roles = get_option( 'pmpro_roles_'.$co_level->id );
+					$roles = self::get_roles_for_level( $co_level->id );
 					if( is_array( $roles ) && ! empty( $roles ) ){
 						foreach( $roles as $role_key => $role_name ){
 							$wp_user_object->add_role( $role_key );
@@ -270,7 +306,7 @@ class PMPRO_Roles {
 					}
 				}
 			} else if( $level_id > 0 ){
-				$roles = get_option( 'pmpro_roles_'.intval( $level_id ) );
+				$roles = self::get_roles_for_level( $level_id );
 				if( is_array( $roles ) && ! empty( $roles ) ){
 					$count = 1;
 					foreach( $roles as $role_key => $role_name ){
@@ -321,8 +357,8 @@ class PMPRO_Roles {
 
 			    $editable_roles = apply_filters('editable_roles', $all_roles);
 
-			    $saved_roles = get_option( 'pmpro_roles_'.$level_id );			    
-			    
+			    $saved_roles = self::get_roles_for_level( $level_id );
+				
 			    asort( $editable_roles ); //Display alphabetically
 
 				if( !empty( $editable_roles ) ){
@@ -331,6 +367,7 @@ class PMPRO_Roles {
 						<th scope="row" valign="top"><label><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?>:</label></th>
 						<td>
 							<div class="checkbox_box" <?php if( count( $editable_roles ) > 5 ) { ?>style="height: 150px; overflow: auto; padding: 0px 10px;"<?php } ?>>
+								<input type="hidden" name="pmpro_roles_level_present" value="1" />
 								<ul>
 								<?php
 
