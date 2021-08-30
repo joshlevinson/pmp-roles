@@ -366,13 +366,23 @@ class PMPRO_Roles {
 					<tr>
 						<th scope="row" valign="top"><label><?php esc_html_e( 'Roles', 'pmpro-roles' ); ?>:</label></th>
 						<td>
-							<div class="checkbox_box<?php if ( count( $editable_roles ) > 5 ) { ?> pmpro_scrollable<?php } ?>">
-              <input type="hidden" name="pmpro_roles_level_present" value="1" />
-								  <?php
+							<?php
+								// Build the selectors for the checkbox list based on number of levels.
+								$classes = array();
+								$classes[] = "pmpro_checkbox_box";
+								if ( count( $editable_roles ) > 5 ) {
+									$classes[] = "pmpro_scrollable";
+								}
+								$class = implode( ' ', array_unique( $classes ) );
+							?>
+							<div class="<?php echo esc_attr( $class ); ?>">
+								<input type="hidden" name="pmpro_roles_level_present" value="1" />
+								<?php
 									//New level, choose if they want to create a role for this level
 									if ( $_REQUEST['edit'] < 0 ) { ?>
-										<div class="clickable">
-											<input type='checkbox' name='pmpro_roles_level[pmpro_draft_role]' value='pmpro_draft_role' id='pmpro_draft_role' /> <label for='pmpro_draft_role'><?php _e('Create a new custom role for this membership level', 'pmpro-roles'); ?>
+										<div class="pmpro_clickable">
+											<input type='checkbox' name='pmpro_roles_level[pmpro_draft_role]' value='pmpro_draft_role' id='pmpro_draft_role' />
+											<label for='pmpro_draft_role'><?php _e('Create a new custom role for this membership level', 'pmpro-roles'); ?>
 											</label>
 										</div>
 										<?php
@@ -387,7 +397,7 @@ class PMPRO_Roles {
 									}
 
 									if ( isset( $editable_roles[$custom_pmpro_role] ) ) { ?>
-										<div class="clickable">
+										<div class="pmpro_clickable">
 											<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $custom_pmpro_role ); ?>]' value='<?php echo esc_attr( $editable_roles[$custom_pmpro_role]["name"] ); ?>' id='<?php echo esc_attr( $custom_pmpro_role ); ?>' <?php echo esc_attr( $checked ); ?> />
 											<label for='<?php echo esc_attr( $custom_pmpro_role ); ?>'>
 												<?php echo esc_html( $editable_roles[$custom_pmpro_role]['name'] ); ?>
@@ -416,9 +426,11 @@ class PMPRO_Roles {
 											//excluding the pmpro_role_ roles here
 											if ( $key != 'pmpro_role_' . $level_id ) { //Show this one first
 												?>
-												<div class="clickable">
-													<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo esc_attr( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $key ); ?>'><?php echo esc_html( $role['name'] ); ?>
-													<?php echo "<code>". esc_html( $key ). "</code>"; ?>
+												<div class="pmpro_clickable">
+													<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo esc_attr( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> />
+													<label for='<?php echo esc_attr( $key ); ?>'>
+														<?php echo esc_html( $role['name'] ); ?>
+														<?php echo "<code>". esc_html( $key ). "</code>"; ?>
 													</label>
 												</div>
 												<?php
@@ -426,9 +438,11 @@ class PMPRO_Roles {
 										} else {
 											//include all roles. No checks needed
 											?>
-											<div class="clickable">
-												<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo esc_attr( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> /> <label for='<?php echo esc_attr( $key ); ?>'><?php echo esc_html( $role['name'] ); ?>
-												<?php echo "<code>". esc_html( $key ). "</code>"; ?>
+											<div class="pmpro_clickable">
+												<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $key ); ?>]' value='<?php echo esc_attr( $role["name"] ); ?>' id='<?php echo esc_attr( $key ); ?>' <?php echo esc_attr( $checked ); ?> />
+												<label for='<?php echo esc_attr( $key ); ?>'>
+													<?php echo esc_html( $role['name'] ); ?>
+													<?php echo "<code>". esc_html( $key ). "</code>"; ?>
 												</label>
 											</div>
 											<?php
