@@ -380,9 +380,10 @@ class PMPRO_Roles {
 								<?php
 									//New level, choose if they want to create a role for this level
 									if ( $_REQUEST['edit'] < 0 ) { ?>
-										<div class="pmpro_clickable">
+										<div class="pmpro_clickable" style="border-bottom-width: 4px;">
 											<input type='checkbox' name='pmpro_roles_level[pmpro_draft_role]' value='pmpro_draft_role' id='pmpro_draft_role' />
-											<label for='pmpro_draft_role'><?php _e('Create a new custom role for this membership level', 'pmpro-roles'); ?>
+											<label for='pmpro_draft_role'>
+												<em><?php _e('Create a new custom role for this membership level', 'pmpro-roles'); ?></em>
 											</label>
 										</div>
 										<?php
@@ -397,7 +398,7 @@ class PMPRO_Roles {
 									}
 
 									if ( isset( $editable_roles[$custom_pmpro_role] ) ) { ?>
-										<div class="pmpro_clickable">
+										<div class="pmpro_clickable" style="border-bottom-width: 4px;">
 											<input type='checkbox' name='pmpro_roles_level[<?php echo esc_attr( $custom_pmpro_role ); ?>]' value='<?php echo esc_attr( $editable_roles[$custom_pmpro_role]["name"] ); ?>' id='<?php echo esc_attr( $custom_pmpro_role ); ?>' <?php echo esc_attr( $checked ); ?> />
 											<label for='<?php echo esc_attr( $custom_pmpro_role ); ?>'>
 												<?php echo esc_html( $editable_roles[$custom_pmpro_role]['name'] ); ?>
