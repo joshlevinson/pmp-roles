@@ -21,7 +21,7 @@ class PMPRO_Roles {
 	function __construct(){
 		add_action( 'pmpro_save_membership_level', array( $this, 'edit_level' ) );
 		add_action( 'pmpro_delete_membership_level', array( $this, 'delete_level' ) );
-		if ( version_compare( '2.5.8', PMPRO_VERSION, '>' ) ) {
+		if ( defined( 'PMPRO_VERSION' ) && version_compare( '2.5.8', PMPRO_VERSION, '>' ) ) {
 			// Use legacy functionality to update roles on level change.
 			add_action( 'pmpro_after_change_membership_level', array($this, 'user_change_level' ), 10, 2 );
 		} else {
