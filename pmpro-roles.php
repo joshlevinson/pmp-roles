@@ -634,5 +634,16 @@ class PMPRO_Roles {
 		<?php
 	}
 }
-new PMPRO_Roles;
 register_activation_hook( __FILE__, array( 'PMPRO_Roles', 'install' ) );
+
+/**
+ * Initialize PMPro Roles on plugins_loaded and once PMPro is active.
+ * 
+ * @since TBD
+ */
+function pmpro_roles_plugins_loaded() {
+	if ( defined( 'PMPRO_VERSION' ) ) {
+		new PMPRO_Roles;	
+	}
+}
+add_action( 'plugins_loaded', 'pmpro_roles_plugins_loaded' );
