@@ -19,7 +19,17 @@ class PMPRO_Roles {
 	static $ajaction = 'pmpro_roles_repair';
 	
 	function __construct(){
-		add_action( 'pmpro_save_membership_level', array( $this, 'edit_level' ) );
+		$this->pmpro_hooks();
+		$this->wp_hooks();
+	}
+
+	/**
+	 * Hooks that run only when PMPro is active.
+	 *
+	 * @since TBD
+	 */
+	function pmpro_hooks() {
+		add_action( 'pmpro_save_membership_level', array( $this, 'edit_level' ) );		
 		add_action( 'pmpro_delete_membership_level', array( $this, 'delete_level' ) );
 		if ( defined( 'PMPRO_VERSION' ) && version_compare( '2.5.8', PMPRO_VERSION, '>' ) ) {
 			// Use legacy functionality to update roles on level change.
@@ -27,14 +37,24 @@ class PMPRO_Roles {
 		} else {
 			add_action( 'pmpro_after_all_membership_level_changes', array( $this, 'after_all_level_changes' ), 10, 1 );
 		}
-		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
-		add_action( 'wp_ajax_' . PMPRO_Roles::$ajaction, array( $this, 'install' ) );
-		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( 'PMPRO_Roles', 'add_action_links' ) );
-		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
-		add_action( 'admin_init', array( 'PMPRO_Roles', 'delete_and_deactivate' ) );
+		
 		add_action( 'pmpro_membership_level_after_other_settings', array( 'PMPRO_Roles', 'level_settings' ) );
-		add_filter( 'editable_roles', array( 'PMPRO_Roles', 'remove_list_roles' ), 10, 1 );
+	}
+
+	/**
+	 * Hooks that may need to run without PMPro activated.
+	 *
+	 * @return void
+	 */
+	function wp_hooks() {
+		add_action( 'admin_enqueue_scripts', array($this, 'enqueue_admin_scripts' ) );
 		add_action( 'init', array( $this, 'load_text_domain' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( 'PMPRO_Roles', 'add_action_links' ) );	
+		add_action( 'wp_ajax_' . PMPRO_Roles::$ajaction, array( $this, 'install' ) );
+		add_filter( 'plugin_row_meta', array( 'PMPRO_Roles', 'plugin_row_meta' ), 10, 2 );
+		add_filter( 'editable_roles', array( 'PMPRO_Roles', 'remove_list_roles' ), 10, 1 );
+		add_action( 'admin_init', array( 'PMPRO_Roles', 'delete_and_deactivate' ) );
+
 	}
 
 	/** 
