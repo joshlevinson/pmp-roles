@@ -5,7 +5,7 @@
  * Plugin URI: https://www.paidmembershipspro.com/add-ons/pmpro-roles/
  * Author: Paid Memberships Pro
  * Author URI: https://www.paidmembershipspro.com
- * Version: 1.4.1
+ * Version: 1.4.2
  * License: GPL2
  * Text Domain: pmpro-roles
  * Domain Path: /languages
@@ -26,7 +26,7 @@ class PMPRO_Roles {
 	/**
 	 * Hooks that run only when PMPro is active.
 	 *
-	 * @since TBD
+	 * @since 1.4.2
 	 */
 	function pmpro_hooks() {
 		add_action( 'pmpro_save_membership_level', array( $this, 'edit_level' ) );		
@@ -674,7 +674,7 @@ register_activation_hook( __FILE__, array( 'PMPRO_Roles', 'install' ) );
 /**
  * Initialize PMPro Roles on plugins_loaded and once PMPro is active.
  * 
- * @since TBD
+ * @since 1.4.2
  */
 function pmpro_roles_plugins_loaded() {
 	if ( defined( 'PMPRO_VERSION' ) ) {

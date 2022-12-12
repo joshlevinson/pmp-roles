@@ -2,8 +2,8 @@
 Contributors: strangerstudios, joshlevinson
 Tags: pmpro, paid memberships pro, membership, roles
 Requires at least: 5.2
-Tested up to: 5.8
-Stable tag: 1.4.1
+Tested up to: 6.1
+Stable tag: 1.4.2
 
 Adds a WordPress Role for each Membership Level.
 
@@ -45,6 +45,10 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Please visit our premium support site at https://www.paidmembershipspro.com for more documentation and our support forums.
 
 == Changelog ==
+= 1.4.2 - 2022-12-12 =
+* ENHANCEMENT: Improved UI for role selection in the edit level settings.
+* BUG FIX: Fixed issue where fatal error was being caused when Paid Memberships Pro was deactivated. 
+
 = 1.4.1 - 2021-08-30 =
 * BUG FIX/ENHANCEMENT: Checkbox list scrollbars are now more noticeable on MacOS.
 * BUG FIX: Fixed issue where level role settings weren't being honored sometimes if the default level role was selected.
